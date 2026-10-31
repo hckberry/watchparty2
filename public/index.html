@@ -3,135 +3,150 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0e18">
 <title>Watch Party</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f5b94a'/%3E%3Cpath d='M12 9l11 7-11 7z' fill='%230d0e18'/%3E%3C/svg%3E">
 <style>
-:root{
-  --bg:#0f0f11; --panel:#17171a; --panel2:#202024; --line:#2a2a30; --text:#ededf0; --mute:#8f8f99;
-  --accent:#e8553d; --ok:#4ccf8a;
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  color-scheme:dark;
-}
+:root{--bg:#0d0e18;--panel:#161827;--panel2:#1f2135;--line:#2a2d46;--text:#edecf6;--mute:#8d90ab;--accent:#f5b94a;--ink:#1b1405;--ok:#3fd6a6;--bad:#ff7a7a;
+  --font:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{margin:0;height:100%}
-body{background:var(--bg);color:var(--text);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased;
-  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(1100px 520px at 50% -180px,#24213f 0,transparent 70%),var(--bg);color:var(--text);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 button,input,select{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
-header{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.logo{font-weight:700;font-size:18px;letter-spacing:-.2px}
-.logo b{color:var(--accent)}
+header{display:flex;align-items:center;gap:12px;padding:12px 22px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:18px;letter-spacing:-.3px}
+.mark{width:26px;height:26px;border-radius:8px;background:var(--accent);display:grid;place-items:center}
+.mark:after{content:"";margin-left:2px;border-style:solid;border-width:6px 0 6px 10px;border-color:transparent transparent transparent var(--ink)}
 .info{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.tag{font-size:13px;color:var(--mute);padding:4px 10px;border:1px solid var(--line);border-radius:6px}
-.tag.code{color:var(--text);font-weight:700;letter-spacing:2px;font-variant-numeric:tabular-nums}
-.tag.live{color:var(--ok);border-color:#244a38}
+.chipbtn{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--mute)}
+button.chipbtn{cursor:pointer}button.chipbtn:hover{border-color:#464a73}
+.code{color:var(--text);font-weight:800;letter-spacing:3px;font-variant-numeric:tabular-nums}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.dot.ok{background:var(--ok);box-shadow:0 0 8px var(--ok)}.dot.wait{background:var(--accent)}.dot.off{background:var(--bad)}
+.ppl{display:flex}
+.av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;border:2px solid var(--bg);margin-left:-7px}
+.av:first-child{margin-left:0}.av.host{box-shadow:0 0 0 2px var(--accent)}
 
-.btn{border:1px solid var(--line);background:var(--panel2);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px}
-.btn:hover{background:#2a2a30}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.primary:hover{background:#f0634b}
-.btn.sm{padding:5px 10px;font-size:13px}
-input[type=text],input:not([type]),select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;outline:none}
-input:focus,select:focus{border-color:#55555f}
-label.f{display:block;font-size:13px;color:var(--mute);margin:14px 0 5px}
+.btn{border:1px solid var(--line);background:var(--panel2);padding:8px 15px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px;transition:background .15s,border-color .15s}
+.btn:hover{background:#292c47}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.btn.primary:hover{background:#ffc766}
+.btn.sm{padding:6px 12px;font-size:13px}
+.btn:disabled{opacity:.6;cursor:wait}
+input[type=text],input:not([type]),select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 13px;outline:none}
+input:focus,select:focus{border-color:#555a8a}
+label.f{display:block;font-size:13px;color:var(--mute);margin:16px 0 6px}
 
 /* lobby */
-#lobby{max-width:400px;margin:9vh auto 0;padding:0 18px}
-#lobby h1{font-size:28px;margin:0 0 6px;letter-spacing:-.4px}
-#lobby .lead{color:var(--mute);margin:0 0 22px}
-.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 20px 20px}
-.mode{display:flex;border-bottom:1px solid var(--line);margin:0 -20px 4px}
-.mode button{flex:1;background:none;border:0;padding:14px;color:var(--mute);font-weight:600;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+#lobby{max-width:940px;margin:8vh auto 0;padding:0 22px;display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center}
+#lobby h1{font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-1.6px;margin:0 0 16px}
+#lobby .lead{color:var(--mute);font-size:17px;margin:0;max-width:30ch}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:6px 22px 22px;box-shadow:0 30px 80px -40px #000}
+.mode{display:flex;border-bottom:1px solid var(--line);margin:0 -22px 2px}
+.mode button{flex:1;background:none;border:0;padding:15px;color:var(--mute);font-weight:700;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
 .mode button.on{color:var(--text);border-bottom-color:var(--accent)}
-.box .btn.primary{width:100%;margin-top:18px;padding:11px}
-#joinCode{text-transform:uppercase;letter-spacing:4px;font-weight:700}
+.box .btn.primary{width:100%;margin-top:20px;padding:12px}
+#joinCode{text-transform:uppercase;letter-spacing:6px;font-weight:800;font-size:18px}
 
 /* room */
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;padding:16px 20px 30px;max-width:1500px;margin:0 auto;align-items:start}
-.stage{position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;padding:18px 22px 32px;max-width:1560px;margin:0 auto;align-items:start}
+.layout.theater{grid-template-columns:minmax(0,1fr)}.layout.theater .side{display:none}
+.syncbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:12px;font-size:13px;color:var(--mute)}
+.syncbar .grow{flex:1;min-width:150px;padding:0 4px}
+.stage{position:relative;aspect-ratio:16/9;background:#000;border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px var(--line),0 40px 100px -40px rgba(245,185,74,.35)}
 .stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--mute);gap:4px;text-align:center;padding:16px}
-.empty strong{color:var(--text);font-size:17px}
-.syncbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 2px 10px;font-size:13px;color:var(--mute)}
-.syncbar .grow{flex:1;min-width:140px}
-.now{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 2px;font-size:14px;color:var(--mute)}
-.now b{color:var(--text);font-size:16px}
+.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--mute);gap:6px;text-align:center;padding:16px}
+.empty strong{color:var(--text);font-size:20px;letter-spacing:-.3px}
+.now{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 2px;color:var(--mute);font-size:14px}
+.now .t{flex:1;min-width:140px}.now b{color:var(--text);font-size:16px}
 
-.side{background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;height:min(calc(100vh - 100px),760px);min-height:460px;overflow:hidden;position:sticky;top:12px}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;height:calc(100dvh - 96px);max-height:780px;min-height:480px;overflow:hidden;position:sticky;top:16px}
 .tabs{display:flex;border-bottom:1px solid var(--line);flex-shrink:0}
-.tab{flex:1;background:none;border:0;padding:12px;color:var(--mute);font-weight:600;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab{flex:1;background:none;border:0;padding:13px;color:var(--mute);font-weight:700;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
 .tab.on{color:var(--text);border-bottom-color:var(--accent)}
-.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-left:6px;vertical-align:middle}
+.badge{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-left:6px;vertical-align:middle}
 .pane{flex:1;min-height:0;display:flex;flex-direction:column}
-.scroll{overflow-y:auto;padding:12px}
+.scroll{overflow-y:auto;padding:14px}
 .search{display:flex;gap:6px}
-.kind{display:flex;gap:6px;margin:10px 0 0}
-.chip{flex:1;text-align:center;padding:6px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-weight:600;color:var(--mute);cursor:pointer;background:none}
-.chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
-.opts{display:flex;align-items:center;gap:8px;margin:10px 0 12px;font-size:13px;color:var(--mute);flex-wrap:wrap}
+.seg{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px;margin:12px 0}
+.chip{flex:1;border:0;background:none;border-radius:7px;padding:6px;font-size:13px;font-weight:700;color:var(--mute);cursor:pointer}
+.chip.on{background:var(--panel2);color:var(--text)}
+.opts{display:flex;align-items:center;gap:8px 14px;margin:0 0 12px;font-size:13px;color:var(--mute);flex-wrap:wrap}
 .opts select{width:auto;padding:5px 8px;font-size:13px}
 .opts label{display:flex;align-items:center;gap:6px;cursor:pointer}
-.subdub{display:flex;gap:4px;margin:8px 0}
-.sdbtn{flex:1;padding:6px;border:1px solid var(--line);border-radius:6px;background:none;color:var(--mute);font-weight:600;font-size:12px;cursor:pointer}
-.sdbtn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.note{font-size:13px;color:var(--accent);margin:0 0 12px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .card{background:none;border:0;padding:0;text-align:left;cursor:pointer}
-.card .img{aspect-ratio:2/3;background:var(--panel2) center/cover;border-radius:6px;border:1px solid var(--line);transition:border-color .15s}
+.card .img{position:relative;aspect-ratio:2/3;background:var(--panel2);border-radius:9px;border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;font-size:28px;font-weight:800;color:var(--mute);transition:border-color .15s}
+.card .img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .card:hover .img{border-color:var(--accent)}
-.card .t{font-size:12.5px;font-weight:600;margin-top:5px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .tt{font-size:12.5px;font-weight:700;margin-top:6px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card .y{font-size:12px;color:var(--mute)}
-.msgline{color:var(--mute);font-size:14px;padding:22px 6px;text-align:center}
+.msgline{color:var(--mute);font-size:14px;padding:26px 8px;text-align:center}
 .back{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .back h3{margin:0;font-size:16px;flex:1;line-height:1.25}
-.ep{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 4px;cursor:pointer}
+.ep{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 4px;cursor:pointer}
 .ep:hover{background:var(--panel2)}
-.ep .n{width:26px;color:var(--mute);font-variant-numeric:tabular-nums;text-align:right}
+.ep .n{width:28px;color:var(--mute);font-variant-numeric:tabular-nums;text-align:right}
 .ep .tt{flex:1;font-size:14px;line-height:1.3}
 .ep small{display:block;color:var(--mute);font-size:12px}
+.ep.soon{opacity:.55}
 
-.chatlog{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+.chatlog{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:7px;min-height:240px}
 .msg{font-size:14px;overflow-wrap:anywhere}
-.msg b{color:var(--accent);margin-right:6px}
+.msg b{margin-right:7px}
 .msg.sys{color:var(--mute);font-size:13px}
 .chatsend{display:flex;gap:6px;padding:10px;border-top:1px solid var(--line)}
 
-.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translate(-50%,12px);opacity:0;pointer-events:none;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;font-weight:600;transition:.2s;z-index:99}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translate(-50%,12px);opacity:0;pointer-events:none;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:700;transition:.2s;z-index:99;max-width:min(92vw,460px);text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+.over{position:fixed;inset:0;background:rgba(8,8,16,.82);display:grid;place-items:center;z-index:98;padding:20px}
+.over .box{padding:26px;text-align:center;max-width:360px}
+.over h2{margin:0 0 6px}.over p{color:var(--mute);margin:0}
 
 @media (max-width:980px){
-  .layout{grid-template-columns:1fr;padding:12px}
-  .side{position:static;height:480px;min-height:0}
+  #lobby{grid-template-columns:1fr;gap:26px;margin-top:5vh}
+  .layout{grid-template-columns:1fr;padding:0 0 24px;gap:0}
+  .top{position:sticky;top:env(safe-area-inset-top);z-index:5;background:var(--bg);padding:10px 12px 0}
+  .syncbar{margin-bottom:10px}
+  .now{padding:10px 14px}
+  .side{position:static;height:auto;max-height:none;min-height:62vh;margin:0 12px}
+  #theaterBtn{display:none}
 }
-@media (max-width:520px){header{padding:10px 12px}.stage{border-radius:8px}}
+@media (max-width:520px){header{padding:10px 12px}.stage{border-radius:10px}}
 </style>
 </head>
 <body>
 <header>
-  <div class="logo">Watch<b>Party</b></div>
+  <div class="logo"><span class="mark"></span>Watch Party</div>
   <div class="info" id="roomInfo" hidden>
-    <span class="tag code" id="codePill">------</span>
-    <button class="btn sm" id="copyBtn">Copy code</button>
-    <button class="btn sm" id="linkBtn">Invite link</button>
-    <span class="tag" id="rolePill">Host</span>
-    <span class="tag" id="statusPill">Connecting…</span>
+    <button class="chipbtn" id="codeBtn" title="Copy room code"><span class="code" id="codePill">------</span></button>
+    <button class="btn sm" id="linkBtn">Copy invite link</button>
+    <span class="chipbtn"><span class="ppl" id="ppl"></span><span id="pplCount">1 person</span></span>
+    <span class="chipbtn"><span class="dot wait" id="statusDot"></span><span id="statusPill">Connecting…</span></span>
     <button class="btn sm" id="leaveBtn">Leave</button>
   </div>
 </header>
 
 <section id="lobby">
-  <h1>Watch something together</h1>
-  <p class="lead">Make a room, send your friend the code, and pick a movie, show, or anime.</p>
+  <div>
+    <h1>Press play together.</h1>
+    <p class="lead">Make a room, share the code, and pick a movie or show. Everyone watches the same thing.</p>
+  </div>
   <div class="box">
     <div class="mode"><button class="on" data-mode="host">Create room</button><button data-mode="join">Join room</button></div>
     <div id="formHost">
       <label class="f" for="hostName">Your name</label>
-      <input id="hostName" placeholder="Eni" maxlength="18">
+      <input id="hostName" placeholder="Eni" maxlength="18" autocomplete="nickname">
       <button class="btn primary" id="createBtn">Create room</button>
     </div>
     <div id="formJoin" hidden>
       <label class="f" for="joinName">Your name</label>
-      <input id="joinName" placeholder="Lo" maxlength="18">
+      <input id="joinName" placeholder="Lo" maxlength="18" autocomplete="nickname">
       <label class="f" for="joinCode">Room code</label>
       <input id="joinCode" placeholder="ABC123" maxlength="6" autocapitalize="characters" autocomplete="off">
       <button class="btn primary" id="joinBtn">Join room</button>
@@ -140,52 +155,52 @@ label.f{display:block;font-size:13px;color:var(--mute);margin:14px 0 5px}
 </section>
 
 <section id="room" hidden>
-  <div class="layout">
-    <div>
-      <div class="syncbar" id="syncBar">
-        <button class="btn sm primary" id="syncBtn" title="Reload the player at the room's current spot">⟳ Sync with room</button>
-        <button class="btn sm" id="syncAllBtn" title="Push the room's current spot to everyone" hidden>Sync everyone</button>
-        <span class="grow" id="syncInfo">Press Sync if you're out of step with the room.</span>
+  <div class="layout" id="layout">
+    <div class="main">
+      <div class="top">
+        <div class="syncbar">
+          <button class="btn sm primary" id="syncBtn" title="Reload the player at the room's current spot">⟳ Sync with room</button>
+          <button class="btn sm" id="syncAllBtn" title="Send the room's current spot to everyone" hidden>Sync everyone</button>
+          <span class="grow" id="syncInfo">Out of step with the room? Press Sync.</span>
+        </div>
+        <div class="stage"><div id="player-container" style="position:absolute;inset:0">
+          <div class="empty"><strong>Nothing playing yet</strong>Search for a movie or show on the right.</div>
+        </div></div>
       </div>
-      <div class="stage"><div id="player-container" style="position:absolute;inset:0">
-        <div class="empty"><strong>Nothing playing yet</strong>Search for a movie, show, or anime on the right.</div>
-      </div></div>
-      <div class="now" id="nowBar" hidden><span>Now playing: <b id="nowTitle"></b></span><button class="btn sm" id="nextSrv" title="Switch to the next server">Not loading? Next server</button></div>
+      <div class="now" id="nowBar" hidden>
+        <span class="t">Now playing: <b id="nowTitle"></b></span>
+        <button class="btn sm" id="nextSrv" title="Switch the whole room to the next server">Not loading? Next server</button>
+        <button class="btn sm" id="theaterBtn">Theater</button>
+      </div>
     </div>
 
     <aside class="side">
       <div class="tabs">
         <button class="tab on" data-tab="browse">Browse</button>
-        <button class="tab" data-tab="chat">Chat<span class="dot" id="chatBadge" hidden></span></button>
+        <button class="tab" data-tab="chat">Chat<span class="badge" id="chatBadge" hidden></span></button>
       </div>
 
       <div class="pane scroll" id="pane-browse">
         <div id="searchView">
           <div class="search">
-            <input id="searchInput" placeholder="Search titles" spellcheck="false">
+            <input id="searchInput" placeholder="Search movies" spellcheck="false" autocomplete="off">
             <button class="btn primary" id="searchBtn">Search</button>
           </div>
-          <div class="kind">
+          <div class="seg">
             <button class="chip on" data-kind="movie">Movies</button>
             <button class="chip" data-kind="series">TV shows</button>
-            <button class="chip" data-kind="anime">Anime</button>
           </div>
           <div class="opts">
             <select id="serverSelect" aria-label="Server"></select>
             <label title="Some servers refuse to play with this on"><input type="checkbox" id="blockPop"> Block pop-ups</label>
+            <label id="pickWrap" hidden><input type="checkbox" id="guestPick" checked> Guests can pick</label>
           </div>
-          <div id="animeOpts" class="subdub" hidden>
-            <button class="sdbtn on" data-audio="sub">SUB</button>
-            <button class="sdbtn" data-audio="dub">DUB</button>
-          </div>
-          <div id="searchResults"><div class="msgline">Search for something to watch.</div></div>
+          <p class="note" id="pickNote" hidden>The host is choosing what plays.</p>
+          <div id="results"><div class="msgline">Search for a title to start watching.</div></div>
         </div>
 
         <div id="showView" hidden>
-          <div class="back">
-            <button class="btn sm" id="backBtn">← Back</button>
-            <h3 id="showName"></h3>
-          </div>
+          <div class="back"><button class="btn sm" id="backBtn">← Back</button><h3 id="showName"></h3></div>
           <select id="seasonSelect" aria-label="Season"></select>
           <div id="episodes" style="margin-top:8px"></div>
         </div>
@@ -201,229 +216,95 @@ label.f{display:block;font-size:13px;color:var(--mute);margin:14px 0 5px}
     </aside>
   </div>
 </section>
+
+<div class="over" id="over" hidden><div class="box"><h2 id="overTitle">Room closed</h2><p id="overMsg"></p><button class="btn primary" id="overBtn">Back to start</button></div></div>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
 (function(){
 "use strict";
 const $ = s => document.querySelector(s);
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const S = { ws:null, inRoom:false, role:null, code:'', name:'Guest', tab:'browse', kind:'movie', show:null, seasons:{}, audio:'sub', animeSites:[],
-  cur:null, token:'', pos:null, posSentAt:0, tries:0, rt:null, pt:null, pongAt:0, leaving:false, dropped:false, ended:false };
+const S = { ws:null, inRoom:false, role:null, code:'', name:'Guest', tab:'browse', kind:'movie', seasons:{}, show:null, cur:null,
+  token:'', pos:null, posSentAt:0, tries:0, rt:null, pt:null, pongAt:0, leaving:false, dropped:false, ended:false, guestsPick:true,
+  cid:(Math.random().toString(36).slice(2) + Date.now().toString(36)).slice(0,24) };
 const META = 'https://v3-cinemeta.strem.io';
+const store = { get(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} } };
 
-function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2800); }
-function genCode(){ const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<6;i++) s+=A[Math.floor(Math.random()*A.length)]; return s; }
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),3200); }
+const hue = n => { let h=0; for(const c of String(n)) h=(h*31+c.charCodeAt(0))%360; return h; };
+const send = m => { if (S.ws && S.ws.readyState===1) S.ws.send(JSON.stringify(m)); };
+const live = () => S.ws && S.ws.readyState===1;
+async function copy(text, ok){
+  try{ await navigator.clipboard.writeText(text); toast(ok); }
+  catch(e){
+    const t=document.createElement('textarea'); t.value=text; t.style.cssText='position:fixed;opacity:0'; document.body.appendChild(t); t.select();
+    let done=false; try{ done=document.execCommand('copy'); }catch(x){} t.remove(); toast(done ? ok : text);
+  }
+}
 
 function addChat(who, text, mine){
   const log=$('#chatLog'), d=document.createElement('div');
   if (who==='system'){ d.className='msg sys'; d.textContent=text; }
-  else { d.className='msg'; d.innerHTML=`<b>${esc(mine?'You':who)}</b>${esc(text)}`; if(!mine && S.tab!=='chat') $('#chatBadge').hidden=false; }
-  log.appendChild(d); log.scrollTop=log.scrollHeight;
+  else {
+    d.className='msg'; const b=document.createElement('b');
+    b.textContent = mine ? 'You' : who; b.style.color = `hsl(${hue(who)} 75% 74%)`;
+    d.append(b, document.createTextNode(text));
+    if(!mine && S.tab!=='chat') $('#chatBadge').hidden=false;
+  }
+  log.appendChild(d); while(log.children.length>300) log.firstChild.remove(); log.scrollTop=log.scrollHeight;
 }
-function setStatus(t, live){ const p=$('#statusPill'); p.textContent=t; p.classList.toggle('live',!!live); }
-const send = m => { if (S.ws && S.ws.readyState===1) S.ws.send(JSON.stringify(m)); };
+function setStatus(t, state){ $('#statusPill').textContent=t; $('#statusDot').className='dot '+state; }
+function renderPeople(list){
+  const box=$('#ppl'); box.innerHTML='';
+  list.slice(0,5).forEach(p => {
+    const a=document.createElement('span'); a.className='av'+(p.host?' host':''); a.textContent=(p.name[0]||'?').toUpperCase();
+    a.title=p.name+(p.host?' (host)':''); a.style.background=`hsl(${hue(p.name)} 50% 30%)`; box.appendChild(a);
+  });
+  $('#pplCount').textContent = list.length + (list.length===1 ? ' person' : ' people');
+}
 
-/* ---------- servers (Movie/TV) ---------- */
+/* ---------- servers ---------- */
+/* Keep the hosts in sync with ALLOWED_HOSTS in server.js */
 const SERVERS = [
-  { name: 'VidSrc (Fast)', m: i => `https://vidsrc.to/embed/movie/${i}`, t: (i,s,e) => `https://vidsrc.to/embed/tv/${i}/${s}/${e}` },
-  { name: 'EmbedMaster', m: i => `https://embedmaster.link/movie/${i}`, t: (i,s,e) => `https://embedmaster.link/tv/${i}/${s}/${e}` },
-  { name: 'VidLink', m: i => `https://vidlink.pro/movie/${i}`, t: (i,s,e) => `https://vidlink.pro/tv/${i}/${s}/${e}` },
-  { name: 'VidFast', m: i => `https://vidfast.pro/movie/${i}`, t: (i,s,e) => `https://vidfast.pro/tv/${i}/${s}/${e}` },
-  { name: '2Embed', m: i => `https://www.2embed.cc/embed/${i}`, t: (i,s,e) => `https://www.2embed.cc/embedtv/${i}&s=${s}&e=${e}` },
-  { name: 'VidNest', m: i => `https://vidnest.fun/movie/${i}`, t: (i,s,e) => `https://vidnest.fun/tv/${i}/${s}/${e}` }
+  { name:'VidSrc (Fast)', m:i=>`https://vidsrc.to/embed/movie/${i}`, t:(i,s,e)=>`https://vidsrc.to/embed/tv/${i}/${s}/${e}` },
+  { name:'EmbedMaster', m:i=>`https://embedmaster.link/movie/${i}`, t:(i,s,e)=>`https://embedmaster.link/tv/${i}/${s}/${e}` },
+  { name:'VidLink', m:i=>`https://vidlink.pro/movie/${i}`, t:(i,s,e)=>`https://vidlink.pro/tv/${i}/${s}/${e}` },
+  { name:'VidFast', m:i=>`https://vidfast.pro/movie/${i}`, t:(i,s,e)=>`https://vidfast.pro/tv/${i}/${s}/${e}` },
+  { name:'2Embed', m:i=>`https://www.2embed.cc/embed/${i}`, t:(i,s,e)=>`https://www.2embed.cc/embedtv/${i}&s=${s}&e=${e}` },
+  { name:'VidNest', m:i=>`https://vidnest.fun/movie/${i}`, t:(i,s,e)=>`https://vidnest.fun/tv/${i}/${s}/${e}` }
 ];
 $('#serverSelect').innerHTML = SERVERS.map((v,n)=>`<option value="${n}">${v.name}</option>`).join('');
+const serverUrl = (i,k,id,s,e) => { const v=SERVERS[i]||SERVERS[0]; return k==='movie' ? v.m(id) : v.t(id,s,e); };
+function serverIndexOf(url){ try{ const h=new URL(url).hostname; return SERVERS.findIndex(v => new URL(v.m('tt0')).hostname===h); }catch(e){ return -1; } }
 
-/* ---------- Anime (Dynamic from everythingmoe) ---------- */
-async function loadAnimeSites(){
-  try {
-    const r = await fetch('/anime-sites');
-    const j = await r.json();
-    S.animeSites = j;
-  } catch(e){ console.error("Failed to load anime sites", e); }
+function sendPlay(url, name, meta){
+  if (!live()) return toast('Not connected yet. Reconnecting…');
+  if (S.role!=='host' && !S.guestsPick) return toast('Only the host can pick what plays right now.');
+  send({t:'play', url, name, meta});
 }
+const play = (kind,id,s,e,name) => sendPlay(serverUrl(+$('#serverSelect').value,kind,id,s,e), name, {kind,id,s,e});
 
-async function anilistSearch(q){
-  const query = `query($s:String){Page(perPage:12){media(search:$s,type:ANIME,sort:SEARCH_MATCH){id idMal title{romaji english}coverImage{medium}startDate{year}}}}`;
-  try {
-    const r = await fetch('https://graphql.anilist.co', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json','Accept':'application/json'},
-      body: JSON.stringify({query, variables:{s:q}})
-    });
-    const j = await r.json();
-    return (j.data?.Page?.media || []).map(a => ({
-      anilistId: a.id, malId: a.idMal,
-      name: a.title.english || a.title.romaji,
-      poster: a.coverImage?.medium,
-      releaseInfo: a.startDate?.year || ''
-    }));
-  } catch(e){ return []; }
-}
-
-async function play(kind, id, s, e, name){
-  S.last = { kind, id, s, e, name };
-  if (kind === 'anime') return playAnime(id, s, name);
-  
-  const srv = SERVERS[+$('#serverSelect').value] || SERVERS[0];
-  const url = kind === 'movie' ? srv.m(id) : srv.t(id, s, e);
-  requestPlay(url, name);
-}
-
-async function playAnime(anilistId, ep, name){
-  let malId = null;
-  try {
-    const r = await fetch('https://graphql.anilist.co', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ query: `query($id:Int){Media(id:$id,type:ANIME){idMal}}`, variables:{id:anilistId} })
-    });
-    const j = await r.json();
-    malId = j.data?.Media?.idMal;
-  } catch(e){}
-  if (!malId) return toast('Could not resolve this anime ID.');
-
-  const site = S.animeSites[0] || { url: 'https://vidlink.pro' };
-  const url = `${site.url}/anime/${malId}/${ep}/${S.audio === 'dub' ? 'dub' : 'sub'}`;
-  requestPlay(url, name + ' (EP ' + ep + ' ' + S.audio.toUpperCase() + ')');
-}
-
-function requestPlay(url, name){
-  if (S.role === 'host'){ loadPlayer(url, name); send({t:'player', url, name}); }
-  else { send({t:'req-player', url, name}); toast('Asked the host to play ' + name); }
-}
-
-/* ---------- search ---------- */
-async function imdbSearch(q){
-  try {
-    const c = q.trim().toLowerCase();
-    const first = /^[a-z0-9]/.test(c) ? c[0] : 'x';
-    const r = await fetch(`https://v3.sg.media-imdb.com/suggestion/${first}/${encodeURIComponent(c)}.json`);
-    const j = await r.json();
-    const types = S.kind === 'movie' ? ['movie','tvMovie'] : ['tvSeries','tvMiniSeries'];
-    return (j.d||[]).filter(x => /^tt/.test(x.id) && types.includes(x.qid)).map(x => ({ imdb_id:x.id, name:x.l, releaseInfo:x.y, poster:x.i?.imageUrl }));
-  } catch(e){ return []; }
-}
-
-async function doSearch(q){
-  const box = $('#searchResults');
-  box.innerHTML = '<div class="msgline">Searching…</div>';
-
-  if (S.kind === 'anime'){
-    const anime = await anilistSearch(q);
-    if (!anime.length){ box.innerHTML = '<div class="msgline">No anime found for "'+esc(q)+'".</div>'; return; }
-    box.innerHTML = '<div class="grid"></div>';
-    const grid = box.firstChild;
-    anime.forEach(a => {
-      const b = document.createElement('button'); b.className = 'card';
-      b.innerHTML = `<div class="img" style="${a.poster ? `background-image:url('${esc(a.poster)}')` : ''}"></div><div class="t">${esc(a.name)}</div><div class="y">${esc(a.releaseInfo)}</div>`;
-      b.onclick = () => openAnime(a.anilistId, a.name);
-      grid.appendChild(b);
-    });
-    return;
-  }
-
-  try {
-    let metas = [];
-    try { const r = await fetch(`${META}/catalog/${S.kind}/top/search=${encodeURIComponent(q)}.json`); const j = await r.json(); metas = j.metas || []; } catch(e){}
-    if (!metas.length) metas = await imdbSearch(q);
-    if (!metas.length){ box.innerHTML = '<div class="msgline">No results for "'+esc(q)+'".</div>'; return; }
-    box.innerHTML = '<div class="grid"></div>';
-    const grid = box.firstChild;
-    metas.slice(0,18).forEach(m => {
-      const id = m.imdb_id || m.id;
-      const b = document.createElement('button'); b.className = 'card';
-      b.innerHTML = `<div class="img" style="${m.poster ? `background-image:url('${esc(m.poster)}')` : ''}"></div><div class="t">${esc(m.name)}</div><div class="y">${esc(m.releaseInfo || m.year || '')}</div>`;
-      b.onclick = () => {
-        if (S.kind === 'movie') play('movie', id, 0, 0, m.name);
-        else openShow(id, m.name);
-      };
-      grid.appendChild(b);
-    });
-  } catch(e){ box.innerHTML = '<div class="msgline">Search failed. Check your connection.</div>'; }
-}
-
-/* ---------- Anime episode list ---------- */
-async function openAnime(anilistId, name){
-  S.show = { anilistId, name };
-  $('#searchView').hidden = true; $('#showView').hidden = false; $('#showName').textContent = name;
-  $('#seasonSelect').hidden = true;
-  $('#episodes').innerHTML = '<div class="msgline">Loading episodes…</div>';
-  try {
-    const r = await fetch('https://graphql.anilist.co', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ query: `query($id:Int){Media(id:$id,type:ANIME){episodes}}`, variables:{id:anilistId} })
-    });
-    const j = await r.json();
-    const total = j.data?.Media?.episodes;
-    if (!total){ $('#episodes').innerHTML = '<div class="msgline">No episode list found.</div>'; return; }
-    const box = $('#episodes'); box.innerHTML = '';
-    for (let i = 1; i <= total; i++){
-      const b = document.createElement('button'); b.className = 'ep';
-      b.innerHTML = `<span class="n">${i}</span><span class="tt">Episode ${i}</span>`;
-      b.onclick = () => playAnime(anilistId, i, name);
-      box.appendChild(b);
-    }
-  } catch(e){ $('#episodes').innerHTML = '<div class="msgline">Couldn\'t load episodes.</div>'; }
-}
-
-/* ---------- TV shows ---------- */
-async function openShow(id, name){
-  S.show = { id, name };
-  $('#searchView').hidden = true; $('#showView').hidden = false; $('#showName').textContent = name;
-  $('#seasonSelect').hidden = false;
-  $('#seasonSelect').innerHTML = ''; $('#episodes').innerHTML = '<div class="msgline">Loading episodes…</div>';
-  try {
-    const r = await fetch(`${META}/meta/series/${id}.json`); const j = await r.json();
-    const vids = ((j.meta || {}).videos || []).filter(v => v.season > 0);
-    if (!vids.length){ $('#episodes').innerHTML = '<div class="msgline">No episode list found.</div>'; return; }
-    S.seasons = {};
-    vids.forEach(v => { (S.seasons[v.season] = S.seasons[v.season] || []).push(v); });
-    const nums = Object.keys(S.seasons).map(Number).sort((a,b) => a-b);
-    $('#seasonSelect').innerHTML = nums.map(n => `<option value="${n}">Season ${n}</option>`).join('');
-    renderEpisodes(nums[0]);
-  } catch(e){ $('#episodes').innerHTML = '<div class="msgline">Couldn\'t load episodes.</div>'; }
-}
-
-function renderEpisodes(season){
-  const list = (S.seasons[season] || []).slice().sort((a,b) => (a.episode || a.number) - (b.episode || b.number));
-  const box = $('#episodes'); box.innerHTML = '';
-  list.forEach(v => {
-    const ep = v.episode || v.number;
-    const b = document.createElement('button'); b.className = 'ep';
-    const date = v.released ? new Date(v.released).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}) : '';
-    b.innerHTML = `<span class="n">${ep}</span><span class="tt">${esc(v.name || v.title || ('Episode ' + ep))}${date ? `<small>${esc(date)}</small>` : ''}</span>`;
-    b.onclick = () => play('series', S.show.id, season, ep, `${S.show.name} S${season}E${ep}`);
-    box.appendChild(b);
-  });
-}
-
-/* ---------- player ---------- */
-function fmtTime(s){ s = Math.max(0, Math.round(s)); const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60, p = n => String(n).padStart(2,'0'); return h ? `${h}:${p(m)}:${p(x)}` : `${m}:${p(x)}`; }
-
-/* Only some embeds accept a start time in the URL. */
-const START_HOSTS = ['vidlink.pro', 'vidfast.pro'];
-function canStart(url){ try{ return START_HOSTS.includes(new URL(url).hostname.replace(/^www\./,'')); }catch(e){ return false; } }
+/* ---------- player & sync ---------- */
+function fmtTime(s){ s=Math.max(0,Math.round(s)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60, p=n=>String(n).padStart(2,'0'); return h ? `${h}:${p(m)}:${p(x)}` : `${m}:${p(x)}`; }
+const START_HOSTS = ['vidlink.pro','vidfast.pro'];   // embeds that accept ?startAt=
+function canStart(url){ try{ return START_HOSTS.includes(new URL(url).hostname); }catch(e){ return false; } }
 function withStart(url, sec){
-  if (!(sec >= 5) || !canStart(url)) return url;
-  try{ const u = new URL(url); u.searchParams.set('startAt', Math.floor(sec)); return u.toString(); }catch(e){ return url; }
+  if (!(sec>=5) || !canStart(url)) return url;
+  try{ const u=new URL(url); u.searchParams.set('startAt', Math.floor(sec)); return u.toString(); }catch(e){ return url; }
 }
-
-function loadPlayer(url, name, sec, silent){
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function loadPlayer(url, name, sec, note, meta){
   const sandbox = $('#blockPop').checked ? ' sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"' : '';
-  S.cur = { url, name }; S.pos = null;
+  S.cur = { url, name, meta:meta||null }; S.pos = null;
   $('#player-container').innerHTML = `<iframe src="${esc(withStart(url, sec))}"${sandbox} allowfullscreen allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>`;
   $('#nowTitle').textContent = name; $('#nowBar').hidden = false;
-  if (!silent) addChat('system', 'Now playing: ' + name);
+  $('#nextSrv').hidden = !(meta);
+  if (note) addChat('system', note);
 }
-
-/* ---------- sync ---------- */
 function applySync(m, auto){
   if (!m.url){ if (!auto) toast('Nothing is playing yet.'); return; }
-  const jump = !auto || m.exact;           // on first join only jump when the position is real
-  loadPlayer(m.url, m.name, jump ? m.sec : 0, true);
+  const jump = !auto || m.exact;            // on first join only jump when the position is real
+  loadPlayer(m.url, m.name, jump ? m.sec : 0, '', m.meta);
   const at = fmtTime(m.sec), est = m.exact ? '' : ' (estimate)';
   let msg;
   if (!jump) msg = `Room is around ${at}${est}. Press Sync to jump there.`;
@@ -432,12 +313,9 @@ function applySync(m, auto){
   else msg = `Reloaded. Room is at ${at}${est}. Skip to that spot to match.`;
   $('#syncInfo').textContent = msg; toast(msg);
 }
-function requestSync(){
-  if (!S.ws || S.ws.readyState !== 1) return toast('Not connected yet. Reconnecting…');
-  send({t:'sync'});
-}
+function requestSync(){ if (!live()) return toast('Not connected yet. Reconnecting…'); send({t:'sync'}); }
 
-/* Players that post their position (some embeds do) let the host keep an exact room clock. */
+/* Embeds that post their playback position let the host keep an exact room clock. */
 window.addEventListener('message', e => {
   const f = document.querySelector('#player-container iframe');
   if (!f || e.source !== f.contentWindow) return;
@@ -446,14 +324,13 @@ window.addEventListener('message', e => {
   if (!d || typeof d !== 'object') return;
   const p = (d.data && typeof d.data === 'object') ? d.data : d;
   if (p.currentTime == null) return;
-  const sec = Number(p.currentTime);
-  if (!isFinite(sec)) return;
+  const sec = Number(p.currentTime); if (!isFinite(sec)) return;
   const kind = String(p.event || d.event || p.type || '').toLowerCase();
   const playing = kind !== 'pause' && kind !== 'paused' && kind !== 'ended';
   S.pos = { sec, playing };
   if (S.role !== 'host') return;
   const now = Date.now();
-  if (now - S.posSentAt >= 5000 || kind === 'pause' || kind === 'play' || kind === 'seeked'){ S.posSentAt = now; send({t:'pos', sec, playing}); }
+  if (now - S.posSentAt >= 5000 || kind==='pause' || kind==='play' || kind==='seeked'){ S.posSentAt = now; send({t:'pos', sec, playing}); }
 });
 
 /* fullscreen → landscape */
@@ -465,170 +342,225 @@ function onFs(){
 document.addEventListener('fullscreenchange', onFs);
 document.addEventListener('webkitfullscreenchange', onFs);
 
-/* ---------- connection ---------- */
-function connect(onOpen){
-  if (S.ws && S.ws.readyState <= 1) return;
-  const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
-  S.ws = ws;
-  ws.onopen = onOpen;
-  ws.onmessage = ev => { let m; try{ m = JSON.parse(ev.data); }catch(e){ return; } onMessage(m); };
-  ws.onclose = () => {
-    if (S.ws !== ws) return;
-    S.ws = null;
-    if (S.inRoom) onDrop();
-    else if (!S.ended && !S.leaving) toast('Couldn\'t reach the server. Try again.');
-  };
+/* ---------- search ---------- */
+let reqId = 0;
+function card(m, onclick){
+  const b=document.createElement('button'); b.className='card';
+  const img=document.createElement('div'); img.className='img'; img.textContent=(m.name||'?')[0].toUpperCase();
+  if (m.poster && /^https:\/\//.test(m.poster)){ const im=new Image(); im.loading='lazy'; im.alt=''; im.src=m.poster; im.onerror=()=>im.remove(); img.appendChild(im); }
+  const t=document.createElement('div'); t.className='tt'; t.textContent=m.name||'';
+  const y=document.createElement('div'); y.className='y'; y.textContent=m.releaseInfo||m.year||'';
+  b.append(img,t,y); b.onclick=onclick; return b;
+}
+async function imdbSearch(q){
+  try{
+    const c=q.trim().toLowerCase(), first=/^[a-z0-9]/.test(c) ? c[0] : 'x';
+    const r=await fetch(`https://v3.sg.media-imdb.com/suggestion/${first}/${encodeURIComponent(c)}.json`); const j=await r.json();
+    const types = S.kind==='movie' ? ['movie','tvMovie'] : ['tvSeries','tvMiniSeries'];
+    return (j.d||[]).filter(x => /^tt/.test(x.id) && types.includes(x.qid)).map(x => ({ imdb_id:x.id, name:x.l, releaseInfo:x.y, poster:x.i && x.i.imageUrl }));
+  }catch(e){ return []; }
+}
+async function doSearch(q){
+  const id=++reqId, kind=S.kind, box=$('#results');
+  box.innerHTML='<div class="msgline">Searching…</div>';
+  let metas=[];
+  try{ const r=await fetch(`${META}/catalog/${kind}/top/search=${encodeURIComponent(q)}.json`); const j=await r.json(); metas=j.metas||[]; }catch(e){}
+  if (!metas.length){ const prev=S.kind; S.kind=kind; metas=await imdbSearch(q); S.kind=prev; }
+  if (id!==reqId) return;                    // a newer search replaced this one
+  if (!metas.length){ box.innerHTML=''; const d=document.createElement('div'); d.className='msgline'; d.textContent=`No results for "${q}". Check the spelling or try another title.`; box.appendChild(d); return; }
+  const grid=document.createElement('div'); grid.className='grid';
+  metas.slice(0,18).forEach(m => {
+    const mid=m.imdb_id||m.id; if(!/^tt\d+$/.test(mid)) return;
+    grid.appendChild(card(m, () => kind==='movie' ? play('movie',mid,0,0,m.name) : openShow(mid,m.name)));
+  });
+  box.innerHTML=''; box.appendChild(grid);
 }
 
-/* ---------- auto-reconnect ---------- */
+/* ---------- TV shows ---------- */
+async function openShow(id, name){
+  S.show={id,name};
+  $('#searchView').hidden=true; $('#showView').hidden=false; $('#showName').textContent=name;
+  $('#seasonSelect').innerHTML=''; $('#episodes').innerHTML='<div class="msgline">Loading episodes…</div>';
+  try{
+    const r=await fetch(`${META}/meta/series/${id}.json`); const j=await r.json();
+    const vids=((j.meta||{}).videos||[]).filter(v => v.season>0);
+    if (!vids.length){ $('#episodes').innerHTML='<div class="msgline">No episode list found.</div>'; return; }
+    S.seasons={}; vids.forEach(v => (S.seasons[v.season]=S.seasons[v.season]||[]).push(v));
+    const nums=Object.keys(S.seasons).map(Number).sort((a,b)=>a-b);
+    $('#seasonSelect').innerHTML=nums.map(n=>`<option value="${n}">Season ${n}</option>`).join('');
+    renderEpisodes(nums[0]);
+  }catch(e){ $('#episodes').innerHTML='<div class="msgline">Couldn\'t load episodes. Check your connection.</div>'; }
+}
+function renderEpisodes(season){
+  const list=(S.seasons[season]||[]).slice().sort((a,b)=>(a.episode||a.number)-(b.episode||b.number));
+  const box=$('#episodes'); box.innerHTML='';
+  list.forEach(v => {
+    const ep=v.episode||v.number, when=v.released ? new Date(v.released) : null, soon=when && when>new Date();
+    const b=document.createElement('button'); b.className='ep'+(soon?' soon':'');
+    const n=document.createElement('span'); n.className='n'; n.textContent=ep;
+    const t=document.createElement('span'); t.className='tt'; t.textContent=v.name||v.title||('Episode '+ep);
+    if (when && !isNaN(when)){ const s=document.createElement('small'); s.textContent=(soon?'Airs ':'')+when.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}); t.appendChild(s); }
+    b.append(n,t); b.onclick=()=>play('series',S.show.id,season,ep,`${S.show.name} S${season}E${ep}`); box.appendChild(b);
+  });
+}
+
+/* ---------- connection ---------- */
+function busy(on, msg){
+  const c=$('#createBtn'), j=$('#joinBtn'); c.disabled=j.disabled=on;
+  c.textContent = on ? (msg||'Connecting…') : 'Create room'; j.textContent = on ? (msg||'Connecting…') : 'Join room';
+}
+function connect(onOpen){
+  if (S.ws && S.ws.readyState<=1) return;
+  let ws; try{ ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws'); }catch(e){ busy(false); return toast('Couldn\'t reach the server.'); }
+  S.ws=ws;
+  const wake=S.inRoom ? 0 : setTimeout(()=>{ if(S.ws===ws && ws.readyState===0) busy(true,'Waking the server…'); },4000);
+  const giveUp=setTimeout(()=>{ if(S.ws===ws && ws.readyState===0) ws.close(); },45000);
+  ws.onopen=()=>{ clearTimeout(wake); clearTimeout(giveUp); onOpen(); };
+  ws.onmessage=ev=>{ let m; try{ m=JSON.parse(ev.data); }catch(e){ return; } onMessage(m); };
+  ws.onclose=()=>{
+    clearTimeout(wake); clearTimeout(giveUp);
+    if (S.ws!==ws) return;
+    S.ws=null;
+    if (S.inRoom) onDrop();
+    else { busy(false); if(!S.ended && !S.leaving) toast('Couldn\'t reach the server. Try again in a moment.'); }
+  };
+}
 function onDrop(){
   if (!S.inRoom || S.leaving || S.ended) return;
-  setStatus('Reconnecting…', false);
-  if (!S.dropped){ S.dropped = true; addChat('system', 'Connection lost. Reconnecting…'); }
+  setStatus('Reconnecting…','wait');
+  if (!S.dropped){ S.dropped=true; addChat('system','Connection lost. Reconnecting…'); }
   scheduleReconnect();
 }
 function scheduleReconnect(){
   if (S.rt || !S.inRoom || S.leaving || S.ended) return;
-  const wait = Math.min(1000 * Math.pow(2, S.tries++), 8000);
-  S.rt = setTimeout(() => { S.rt = null; reconnectNow(); }, wait);
+  S.rt=setTimeout(()=>{ S.rt=null; reconnectNow(); }, Math.min(1000*Math.pow(2,S.tries++), 8000));
 }
 function reconnectNow(){
-  if (!S.inRoom || S.leaving || S.ended || (S.ws && S.ws.readyState <= 1)) return;
-  connect(() => {
-    S.tries = 0;
-    if (S.role === 'host') send({t:'resume', code:S.code, token:S.token, name:S.name});
-    else send({t:'join', code:S.code, name:S.name, rejoin:true});
+  if (!S.inRoom || S.leaving || S.ended || (S.ws && S.ws.readyState<=1)) return;
+  connect(()=>{
+    S.tries=0;
+    if (S.role==='host') send({t:'resume', code:S.code, token:S.token, name:S.name});
+    else send({t:'join', code:S.code, name:S.name, cid:S.cid, rejoin:true});
   });
 }
 /* Phones can leave a socket looking open while it is dead, so check it with a ping. */
 function checkAlive(){
-  if (!S.inRoom || S.leaving || S.ended || !S.ws || S.ws.readyState !== 1) return;
-  const w = S.ws; S.pongAt = 0; send({t:'ping'});
-  clearTimeout(S.pt);
-  S.pt = setTimeout(() => { if (S.ws === w && !S.pongAt){ S.ws = null; try{ w.close(); }catch(e){} onDrop(); } }, 5000);
+  if (!S.inRoom || S.leaving || S.ended || !live()) return;
+  const w=S.ws; S.pongAt=0; send({t:'ping'}); clearTimeout(S.pt);
+  S.pt=setTimeout(()=>{ if(S.ws===w && !S.pongAt){ S.ws=null; try{ w.close(); }catch(e){} onDrop(); } }, 5000);
 }
 setInterval(checkAlive, 25000);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden || !S.inRoom) return;
-  if (!S.ws){ clearTimeout(S.rt); S.rt = null; reconnectNow(); } else checkAlive();
+  if (!S.ws){ clearTimeout(S.rt); S.rt=null; reconnectNow(); } else checkAlive();
 });
+
+function showOver(title, msg){ $('#overTitle').textContent=title; $('#overMsg').textContent=msg; $('#over').hidden=false; }
+function setPick(v){
+  S.guestsPick = v!==false; $('#guestPick').checked = S.guestsPick;
+  $('#pickNote').hidden = S.role==='host' || S.guestsPick;
+}
 
 function onMessage(m){
   switch(m.t){
-    case 'created': S.code = m.code; S.token = m.token || ''; enterRoom('host'); $('#codePill').textContent = m.code; setStatus('Online', true); addChat('system','Room ready.'); break;
+    case 'created': S.code=m.code; S.token=m.token||''; busy(false); enterRoom('host'); $('#codePill').textContent=m.code; setStatus('Online','ok'); addChat('system','Room ready. Share the code or invite link.'); break;
     case 'joined': {
-      const again = S.inRoom; S.code = m.code; S.dropped = false; setStatus('Connected', true);
+      const again=S.inRoom; S.code=m.code; S.dropped=false; busy(false); setStatus('Connected','ok'); setPick(m.guestsPick);
       if (!again){
-        enterRoom('guest'); $('#codePill').textContent = m.code; addChat('system','Connected to room.');
-        if (m.now) applySync({url:m.now.url, name:m.now.name, sec:m.sec, exact:m.exact}, true);
+        enterRoom('guest'); $('#codePill').textContent=m.code; addChat('system','Connected to room.'); setPick(m.guestsPick);
+        if (m.now) applySync({url:m.now.url, name:m.now.name, meta:m.now.meta, sec:m.sec, exact:m.exact}, true);
       } else {
         toast('Reconnected');
-        if (m.now && (!S.cur || S.cur.url !== m.now.url)) loadPlayer(m.now.url, m.now.name);
+        if (m.now && (!S.cur || S.cur.url!==m.now.url)) loadPlayer(m.now.url, m.now.name, 0, '', m.now.meta);
       }
       break;
     }
-    case 'resumed': S.dropped = false; setStatus('Online', true); toast('Reconnected'); break;
+    case 'resumed': S.dropped=false; setStatus('Online','ok'); setPick(m.guestsPick); toast('Reconnected'); break;
     case 'error':
-      toast(m.msg);
-      if (S.inRoom){ S.inRoom = false; S.ended = true; setStatus('Room closed', false); addChat('system', m.msg + ' Leave and make a new room.'); }
-      if(S.ws){ const w = S.ws; S.ws = null; w.close(); }
+      busy(false); toast(m.msg);
+      if (S.inRoom){ S.inRoom=false; S.ended=true; showOver('Room unavailable', m.msg + ' Start a new room to keep watching.'); }
+      if (S.ws){ const w=S.ws; S.ws=null; w.close(); }
       break;
-    case 'pong':    S.pongAt = Date.now(); break;
-    case 'sync':    applySync(m, false); if (m.push) addChat('system', 'Host synced everyone.'); break;
-    case 'synced-all': toast('Sent sync to ' + m.n + (m.n === 1 ? ' person' : ' people')); break;
-    case 'sys':     addChat('system', m.text); break;
-    case 'chat':    addChat(m.from, m.text); break;
-    case 'player':  loadPlayer(m.url, m.name); break;
-    case 'req-player': if(S.role === 'host'){ loadPlayer(m.url, m.name); send({t:'player', url:m.url, name:m.name}); } break;
-    case 'count':   setStatus(m.n + (m.n === 1 ? ' person' : ' people'), true); break;
-    case 'closed':  S.inRoom = false; S.ended = true; setStatus('Room closed', false); addChat('system','The host left.'); break;
+    case 'pong': S.pongAt=Date.now(); break;
+    case 'sys': addChat('system', m.text); break;
+    case 'chat': addChat(m.from, m.text); break;
+    case 'people': renderPeople(m.list||[]); break;
+    case 'settings': setPick(m.guestsPick); break;
+    case 'player': loadPlayer(m.url, m.name, 0, (m.by ? m.by+' started ' : 'Now playing: ')+m.name, m.meta); $('#syncInfo').textContent='Everyone is on the same video.'; break;
+    case 'sync': applySync(m, false); if (m.push) addChat('system','Host synced everyone.'); break;
+    case 'synced-all': toast('Sent sync to '+m.n+(m.n===1?' person':' people')); break;
+    case 'closed': S.inRoom=false; S.ended=true; setStatus('Room closed','off'); showOver('Room closed','The host left the room.'); break;
   }
 }
 
 /* ---------- rooms ---------- */
 function enterRoom(role){
-  S.inRoom = true;
-  $('#lobby').hidden = true; $('#room').hidden = false; $('#roomInfo').hidden = false;
-  $('#rolePill').textContent = role === 'host' ? 'Host' : 'Guest';
-  $('#syncAllBtn').hidden = role !== 'host';
+  S.inRoom=true; S.role=role;
+  $('#lobby').hidden=true; $('#room').hidden=false; $('#roomInfo').hidden=false;
+  $('#syncAllBtn').hidden = role!=='host'; $('#pickWrap').hidden = role!=='host';
 }
 function createRoom(){
-  S.role = 'host'; S.name = $('#hostName').value.trim() || 'Host';
-  connect(() => send({t:'create', name:S.name}));
+  S.role='host'; S.name=$('#hostName').value.trim() || 'Host'; store.set('wp-name', S.name);
+  busy(true); connect(()=>send({t:'create', name:S.name}));
 }
 function joinRoom(){
-  const code = $('#joinCode').value.trim().toUpperCase();
-  if(code.length < 4) return toast('Enter the room code');
-  S.role = 'guest'; S.name = $('#joinName').value.trim() || 'Guest';
-  connect(() => send({t:'join', name:S.name, code}));
+  const code=$('#joinCode').value.trim().toUpperCase();
+  if (code.length<6) return toast('Enter the 6-character room code.');
+  S.role='guest'; S.name=$('#joinName').value.trim() || 'Guest'; store.set('wp-name', S.name);
+  busy(true); connect(()=>send({t:'join', name:S.name, code, cid:S.cid}));
 }
 
 /* ---------- wiring ---------- */
-$('#searchBtn').onclick = () => { const q = $('#searchInput').value.trim(); if(q) doSearch(q); };
-$('#searchInput').onkeydown = e => { if(e.key === 'Enter') $('#searchBtn').click(); };
-
+const run = () => { const q=$('#searchInput').value.trim(); if(q) doSearch(q); };
+$('#searchBtn').onclick = run;
+$('#searchInput').onkeydown = e => { if(e.key==='Enter') run(); };
 document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
-  S.kind = c.dataset.kind;
-  document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c));
-  $('#searchInput').placeholder = S.kind === 'movie' ? 'Search movies' : S.kind === 'series' ? 'Search TV shows' : 'Search anime';
-  $('#animeOpts').hidden = S.kind !== 'anime';
-  const q = $('#searchInput').value.trim(); if(q) doSearch(q);
-  else $('#searchResults').innerHTML = '<div class="msgline">Search for something to watch.</div>';
+  S.kind=c.dataset.kind; document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x===c));
+  $('#searchInput').placeholder = S.kind==='movie' ? 'Search movies' : 'Search TV shows';
+  const q=$('#searchInput').value.trim(); if(q) doSearch(q); else { ++reqId; $('#results').innerHTML='<div class="msgline">Search for a title to start watching.</div>'; }
 });
-
-document.querySelectorAll('.sdbtn').forEach(b => b.onclick = () => {
-  S.audio = b.dataset.audio;
-  document.querySelectorAll('.sdbtn').forEach(x => x.classList.toggle('on', x === b));
-  toast('Anime audio: ' + S.audio.toUpperCase());
-});
-
 $('#nextSrv').onclick = () => {
-  const sel = $('#serverSelect');
-  sel.value = (+sel.value + 1) % SERVERS.length;
-  toast('Trying ' + SERVERS[+sel.value].name);
-  if (S.last) play(S.last.kind, S.last.id, S.last.s, S.last.e, S.last.name);
+  const c=S.cur; if(!c || !c.meta) return;
+  const i=(serverIndexOf(c.url)+1) % SERVERS.length; $('#serverSelect').value=i; toast('Trying '+SERVERS[i].name+' for everyone');
+  sendPlay(serverUrl(i,c.meta.kind,c.meta.id,c.meta.s,c.meta.e), c.name, c.meta);
 };
-if (SERVERS.length < 2) $('#nextSrv').hidden = true;
-
-$('#backBtn').onclick = () => { $('#showView').hidden = true; $('#searchView').hidden = false; };
+$('#blockPop').onchange = () => { if (S.cur){ requestSync(); } };
+$('#guestPick').onchange = e => send({t:'setting', guestsPick:e.target.checked});
+$('#theaterBtn').onclick = () => { const on=$('#layout').classList.toggle('theater'); $('#theaterBtn').textContent = on ? 'Show panel' : 'Theater'; };
+$('#backBtn').onclick = () => { $('#showView').hidden=true; $('#searchView').hidden=false; };
 $('#seasonSelect').onchange = e => renderEpisodes(+e.target.value);
 
 $('#createBtn').onclick = createRoom; $('#joinBtn').onclick = joinRoom;
-$('#hostName').onkeydown = e => { if(e.key === 'Enter') createRoom(); };
-$('#joinCode').onkeydown = e => { if(e.key === 'Enter') joinRoom(); };
-$('#copyBtn').onclick = () => { try{ navigator.clipboard.writeText(S.code); toast('Code copied'); }catch(e){ toast('Code: ' + S.code); } };
-$('#linkBtn').onclick = () => { const u = location.origin + location.pathname + '?room=' + S.code; try{ navigator.clipboard.writeText(u); toast('Invite link copied'); }catch(e){ toast(u); } };
-$('#leaveBtn').onclick = () => { S.leaving = true; send({t:'bye'}); setTimeout(() => { location.href = location.pathname; }, 150); };
+['#hostName'].forEach(s => $(s).onkeydown = e => { if(e.key==='Enter') createRoom(); });
+['#joinName','#joinCode'].forEach(s => $(s).onkeydown = e => { if(e.key==='Enter') joinRoom(); });
+$('#codeBtn').onclick = () => copy(S.code, 'Code copied');
+$('#linkBtn').onclick = () => copy(location.origin+location.pathname+'?room='+S.code, 'Invite link copied');
+$('#leaveBtn').onclick = () => { S.leaving=true; send({t:'bye'}); setTimeout(()=>{ location.href=location.pathname; }, 150); };
+$('#overBtn').onclick = () => { location.href=location.pathname; };
 $('#syncBtn').onclick = requestSync;
-$('#syncAllBtn').onclick = () => {
-  if (!S.ws || S.ws.readyState !== 1) return toast('Not connected yet. Reconnecting…');
-  if (!S.cur) return toast('Nothing is playing yet.');
-  send({t:'sync-all'});
-};
-
-(function(){ const r = (new URLSearchParams(location.search).get('room') || '').toUpperCase().slice(0,6);
-  if(r){ document.querySelector('.mode button[data-mode="join"]').click(); $('#joinCode').value = r; $('#joinName').focus(); } })();
+$('#syncAllBtn').onclick = () => { if(!live()) return toast('Not connected yet. Reconnecting…'); if(!S.cur) return toast('Nothing is playing yet.'); send({t:'sync-all'}); };
 
 document.querySelectorAll('.mode button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('.mode button').forEach(x => x.classList.toggle('on', x === b));
-  $('#formHost').hidden = b.dataset.mode !== 'host'; $('#formJoin').hidden = b.dataset.mode !== 'join';
+  document.querySelectorAll('.mode button').forEach(x => x.classList.toggle('on', x===b));
+  $('#formHost').hidden = b.dataset.mode!=='host'; $('#formJoin').hidden = b.dataset.mode!=='join';
 });
-
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
-  S.tab = t.dataset.tab;
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
-  $('#pane-browse').hidden = S.tab !== 'browse'; $('#pane-chat').hidden = S.tab !== 'chat';
-  if(S.tab === 'chat'){ $('#chatBadge').hidden = true; const l = $('#chatLog'); l.scrollTop = l.scrollHeight; }
+  S.tab=t.dataset.tab; document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x===t));
+  $('#pane-browse').hidden = S.tab!=='browse'; $('#pane-chat').hidden = S.tab!=='chat';
+  if (S.tab==='chat'){ $('#chatBadge').hidden=true; const l=$('#chatLog'); l.scrollTop=l.scrollHeight; }
 });
-
 function sendChat(){
-  const i = $('#chatInput'), text = i.value.trim(); if(!text) return; i.value = '';
-  addChat(S.name, text, true); send({t:'chat', text});
+  const i=$('#chatInput'), text=i.value.trim(); if(!text) return;
+  if (!live()) return toast('Not connected yet. Your message wasn\'t sent.');
+  i.value=''; addChat(S.name, text, true); send({t:'chat', text});
 }
-$('#chatSend').onclick = sendChat; $('#chatInput').onkeydown = e => { if(e.key === 'Enter') sendChat(); };
+$('#chatSend').onclick = sendChat; $('#chatInput').onkeydown = e => { if(e.key==='Enter' && !e.isComposing) sendChat(); };
 
-// Load anime sites on startup
-loadAnimeSites();
+(function(){
+  const saved=store.get('wp-name'); if(saved){ $('#hostName').value=saved; $('#joinName').value=saved; }
+  const r=(new URLSearchParams(location.search).get('room')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+  if (r){ document.querySelector('.mode button[data-mode="join"]').click(); $('#joinCode').value=r; $('#joinName').focus(); }
+})();
 })();
 </script>
 </body>
