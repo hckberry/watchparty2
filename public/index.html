@@ -201,7 +201,7 @@ label.f{display:block;font-size:13px;color:var(--mute);margin:14px 0 5px}
 "use strict";
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const S = { ws:null, inRoom:false, role:null, code:'', name:'Guest', tab:'browse', kind:'movie', show:null, seasons:{}, audio:'sub', animeSites:[] };
+const S = { ws:null, inRoom:false, role:null, code:'', name:'Guest', tab:'browse', kind:'movie', show:null, seasons:{}, audio:'sub', animeServers:[] };
 const META = 'https://v3-cinemeta.strem.io';
 
 function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2800); }
@@ -216,7 +216,7 @@ function addChat(who, text, mine){
 function setStatus(t, live){ const p=$('#statusPill'); p.textContent=t; p.classList.toggle('live',!!live); }
 const send = m => { if (S.ws && S.ws.readyState===1) S.ws.send(JSON.stringify(m)); };
 
-/* ---------- servers (Movie/TV) ---------- */
+/* ---------- Movie/TV servers ---------- */
 const SERVERS = [
   { name: 'VidSrc (Fast)', m: i => `https://vidsrc.to/embed/movie/${i}`, t: (i,s,e) => `https://vidsrc.to/embed/tv/${i}/${s}/${e}` },
   { name: 'EmbedMaster', m: i => `https://embedmaster.link/movie/${i}`, t: (i,s,e) => `https://embedmaster.link/tv/${i}/${s}/${e}` },
@@ -225,17 +225,19 @@ const SERVERS = [
   { name: '2Embed', m: i => `https://www.2embed.cc/embed/${i}`, t: (i,s,e) => `https://www.2embed.cc/embedtv/${i}&s=${s}&e=${e}` },
   { name: 'VidNest', m: i => `https://vidnest.fun/movie/${i}`, t: (i,s,e) => `https://vidnest.fun/tv/${i}/${s}/${e}` }
 ];
-$('#serverSelect').innerHTML = SERVERS.map((v,n)=>`<option value="${n}">${v.name}</option>`).join('');
 
-/* ---------- Anime (Dynamic from everythingmoe) ---------- */
-async function loadAnimeSites(){
-  try {
-    const r = await fetch('/anime-sites');
-    const j = await r.json();
-    S.animeSites = j;
-  } catch(e){ console.error("Failed to load anime sites", e); }
-}
+/* ---------- Anime servers (from your screenshots) ---------- */
+const ANIME_SERVERS = [
+  { name: 'MegaPlay', build: (id, ep, audio) => `https://megaplay.buzz/stream/ani/${id}/${ep}/${audio}` },
+  { name: 'Miruro', build: (id, ep, audio) => `https://miruro.tv/watch/${id}?ep=${ep}` },
+  { name: 'AnimeKai', build: (id, ep, audio) => `https://anikai.to/watch/${id}/episode-${ep}` },
+  { name: 'Mkissa', build: (id, ep, audio) => `https://mkissa.to/anime/${id}/episode-${ep}` },
+  { name: 'AnimeHeaven', build: (id, ep, audio) => `https://animeheaven.me/anime.php?${id}` },
+  { name: 'AnimeVilla', build: (id, ep, audio) => `https://animevilla.org/anime/${id}/episode-${ep}` },
+  { name: '2Embed Anime', build: (id, ep, audio) => `https://www.2embed.cc/embedanime/${id}&s=1&e=${ep}` }
+];
 
+/* ---------- search ---------- */
 async function anilistSearch(q){
   const query = `query($s:String){Page(perPage:12){media(search:$s,type:ANIME,sort:SEARCH_MATCH){id idMal title{romaji english}coverImage{medium}startDate{year}}}}`;
   try {
@@ -254,39 +256,6 @@ async function anilistSearch(q){
   } catch(e){ return []; }
 }
 
-async function play(kind, id, s, e, name){
-  S.last = { kind, id, s, e, name };
-  if (kind === 'anime') return playAnime(id, s, name);
-  
-  const srv = SERVERS[+$('#serverSelect').value] || SERVERS[0];
-  const url = kind === 'movie' ? srv.m(id) : srv.t(id, s, e);
-  requestPlay(url, name);
-}
-
-async function playAnime(anilistId, ep, name){
-  let malId = null;
-  try {
-    const r = await fetch('https://graphql.anilist.co', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ query: `query($id:Int){Media(id:$id,type:ANIME){idMal}}`, variables:{id:anilistId} })
-    });
-    const j = await r.json();
-    malId = j.data?.Media?.idMal;
-  } catch(e){}
-  if (!malId) return toast('Could not resolve this anime ID.');
-
-  const site = S.animeSites[0] || { url: 'https://vidlink.pro' };
-  const url = `${site.url}/anime/${malId}/${ep}/${S.audio === 'dub' ? 'dub' : 'sub'}`;
-  requestPlay(url, name + ' (EP ' + ep + ' ' + S.audio.toUpperCase() + ')');
-}
-
-function requestPlay(url, name){
-  if (S.role === 'host'){ loadPlayer(url, name); send({t:'player', url, name}); }
-  else { send({t:'req-player', url, name}); toast('Asked the host to play ' + name); }
-}
-
-/* ---------- search ---------- */
 async function imdbSearch(q){
   try {
     const c = q.trim().toLowerCase();
@@ -334,6 +303,27 @@ async function doSearch(q){
       grid.appendChild(b);
     });
   } catch(e){ box.innerHTML = '<div class="msgline">Search failed. Check your connection.</div>'; }
+}
+
+/* ---------- Play logic ---------- */
+async function play(kind, id, s, e, name){
+  S.last = { kind, id, s, e, name };
+  if (kind === 'anime') return playAnime(id, s, name);
+  
+  const srv = SERVERS[+$('#serverSelect').value] || SERVERS[0];
+  const url = kind === 'movie' ? srv.m(id) : srv.t(id, s, e);
+  requestPlay(url, name);
+}
+
+function playAnime(anilistId, ep, name){
+  const srv = ANIME_SERVERS[+$('#serverSelect').value] || ANIME_SERVERS[0];
+  const url = srv.build(anilistId, ep, S.audio);
+  requestPlay(url, name + ' (EP ' + ep + ' ' + S.audio.toUpperCase() + ')');
+}
+
+function requestPlay(url, name){
+  if (S.role === 'host'){ loadPlayer(url, name); send({t:'player', url, name}); }
+  else { send({t:'req-player', url, name}); toast('Asked the host to play ' + name); }
 }
 
 /* ---------- Anime episode list ---------- */
@@ -464,6 +454,11 @@ document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
   document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c));
   $('#searchInput').placeholder = S.kind === 'movie' ? 'Search movies' : S.kind === 'series' ? 'Search TV shows' : 'Search anime';
   $('#animeOpts').hidden = S.kind !== 'anime';
+
+  // Swap the server dropdown based on kind
+  const list = S.kind === 'anime' ? ANIME_SERVERS : SERVERS;
+  $('#serverSelect').innerHTML = list.map((v,n)=>`<option value="${n}">${v.name}</option>`).join('');
+
   const q = $('#searchInput').value.trim(); if(q) doSearch(q);
   else $('#searchResults').innerHTML = '<div class="msgline">Search for something to watch.</div>';
 });
@@ -476,11 +471,11 @@ document.querySelectorAll('.sdbtn').forEach(b => b.onclick = () => {
 
 $('#nextSrv').onclick = () => {
   const sel = $('#serverSelect');
-  sel.value = (+sel.value + 1) % SERVERS.length;
-  toast('Trying ' + SERVERS[+sel.value].name);
+  const list = S.kind === 'anime' ? ANIME_SERVERS : SERVERS;
+  sel.value = (+sel.value + 1) % list.length;
+  toast('Trying ' + list[+sel.value].name);
   if (S.last) play(S.last.kind, S.last.id, S.last.s, S.last.e, S.last.name);
 };
-if (SERVERS.length < 2) $('#nextSrv').hidden = true;
 
 $('#backBtn').onclick = () => { $('#showView').hidden = true; $('#searchView').hidden = false; };
 $('#seasonSelect').onchange = e => renderEpisodes(+e.target.value);
@@ -512,9 +507,6 @@ function sendChat(){
   addChat(S.name, text, true); send({t:'chat', text});
 }
 $('#chatSend').onclick = sendChat; $('#chatInput').onkeydown = e => { if(e.key === 'Enter') sendChat(); };
-
-// Load anime sites on startup
-loadAnimeSites();
 })();
 </script>
 </body>
