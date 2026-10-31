@@ -87,6 +87,8 @@ label.f{display:block;font-size:13px;color:var(--mute);margin:14px 0 5px}
 .ep .n{width:26px;color:var(--mute);font-variant-numeric:tabular-nums;text-align:right}
 .ep .tt{flex:1;font-size:14px;line-height:1.3}
 .ep small{display:block;color:var(--mute);font-size:12px}
+.anime-fallback{padding:12px;text-align:center;border-top:1px solid var(--line)}
+.anime-fallback a{color:var(--accent);font-weight:600;text-decoration:none;font-size:13px}
 
 .chatlog{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
 .msg{font-size:14px;overflow-wrap:anywhere}
@@ -181,6 +183,9 @@ label.f{display:block;font-size:13px;color:var(--mute);margin:14px 0 5px}
           </div>
           <select id="seasonSelect" aria-label="Season"></select>
           <div id="episodes" style="margin-top:8px"></div>
+          <div class="anime-fallback" id="animeFallback" hidden>
+            <a id="animeFallbackLink" href="#" target="_blank" rel="noopener">Player not loading? Open on HiAnime ↗</a>
+          </div>
         </div>
       </div>
 
@@ -216,29 +221,17 @@ function addChat(who, text, mine){
 function setStatus(t, live){ const p=$('#statusPill'); p.textContent=t; p.classList.toggle('live',!!live); }
 const send = m => { if (S.ws && S.ws.readyState===1) S.ws.send(JSON.stringify(m)); };
 
-/* ---------- Movie/TV servers ---------- */
+/* ---------- VERIFIED movie/TV servers ---------- */
 const SERVERS = [
-  { name: 'VidSrc (Fast)', m: i => `https://vidsrc.to/embed/movie/${i}`, t: (i,s,e) => `https://vidsrc.to/embed/tv/${i}/${s}/${e}` },
-  { name: 'EmbedMaster', m: i => `https://embedmaster.link/movie/${i}`, t: (i,s,e) => `https://embedmaster.link/tv/${i}/${s}/${e}` },
-  { name: 'VidLink', m: i => `https://vidlink.pro/movie/${i}`, t: (i,s,e) => `https://vidlink.pro/tv/${i}/${s}/${e}` },
-  { name: 'VidFast', m: i => `https://vidfast.pro/movie/${i}`, t: (i,s,e) => `https://vidfast.pro/tv/${i}/${s}/${e}` },
-  { name: '2Embed', m: i => `https://www.2embed.cc/embed/${i}`, t: (i,s,e) => `https://www.2embed.cc/embedtv/${i}&s=${s}&e=${e}` }
+  { name: 'VidLink (verified)', m: i => `https://vidlink.pro/movie/${i}`, t: (i,s,e) => `https://vidlink.pro/tv/${i}/${s}/${e}` },
+  { name: 'VidSrc.sh (verified)', m: i => `https://vidsrc.sh/embed/movie/${i}`, t: (i,s,e) => `https://vidsrc.sh/embed/tv/${i}/${s}/${e}` },
+  { name: '2Embed.skin (verified)', m: i => `https://2embed.skin/embed/${i}`, t: (i,s,e) => `https://2embed.skin/embedtv/${i}&s=${s}&e=${e}` },
+  { name: '2Embed.cc (verified)', m: i => `https://2embed.cc/embed/${i}`, t: (i,s,e) => `https://2embed.cc/embedtv/${i}&s=${s}&e=${e}` }
 ];
 
-/* ---------- Anime servers (verified active) ---------- */
+/* ---------- VERIFIED anime server (VidLink, MAL ID based) ---------- */
 const ANIME_SERVERS = [
-  { 
-    name: 'MegaPlay', 
-    build: (ids, ep, audio) => `https://megaplay.buzz/stream/ani/${ids.anilistId}/${ep}/${audio}` 
-  },
-  { 
-    name: 'VidLink Anime', 
-    build: (ids, ep, audio) => `https://vidlink.pro/anime/${ids.malId}/${ep}/${audio}` 
-  },
-  { 
-    name: '2Embed Anime', 
-    build: (ids, ep, audio) => `https://www.2embed.cc/embedanime/${ids.malId}` 
-  }
+  { name: 'VidLink Anime (verified)', build: (ids, ep, audio) => `https://vidlink.pro/anime/${ids.malId}/${ep}/${audio}` }
 ];
 
 /* ---------- Anime Search (AniList) ---------- */
@@ -336,6 +329,8 @@ async function openAnime(anilistId, malId, name){
   S.show = { ids: { anilistId, malId }, name };
   $('#searchView').hidden = true; $('#showView').hidden = false; $('#showName').textContent = name;
   $('#seasonSelect').hidden = true;
+  $('#animeFallback').hidden = false;
+  $('#animeFallbackLink').href = `https://hianime.to/search?keyword=${encodeURIComponent(name)}`;
   $('#episodes').innerHTML = '<div class="msgline">Loading episodes…</div>';
   try {
     const r = await fetch('https://graphql.anilist.co', {
@@ -360,7 +355,7 @@ async function openAnime(anilistId, malId, name){
 async function openShow(id, name){
   S.show = { id, name };
   $('#searchView').hidden = true; $('#showView').hidden = false; $('#showName').textContent = name;
-  $('#seasonSelect').hidden = false;
+  $('#seasonSelect').hidden = false; $('#animeFallback').hidden = true;
   $('#seasonSelect').innerHTML = ''; $('#episodes').innerHTML = '<div class="msgline">Loading episodes…</div>';
   try {
     const r = await fetch(`${META}/meta/series/${id}.json`); const j = await r.json();
