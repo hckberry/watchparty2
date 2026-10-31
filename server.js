@@ -5,15 +5,13 @@ const path = require("path");
 const { WebSocketServer } = require("ws");
 
 const PORT = process.env.PORT || 3000;
-const INDEX = fs.readFileSync(path.join(__dirname, "public", "index.html"));
+let INDEX;
+try { INDEX = fs.readFileSync(path.join(__dirname, "public", "index.html")); }
+catch (e) { console.error("Missing public/index.html. Keep index.html inside a folder named public."); process.exit(1); }
 
 const server = http.createServer((req, res) => {
   const p = (req.url || "/").split("?")[0];
   if (p === "/healthz") { res.writeHead(200); return res.end("ok"); }
-  
-  if (p === "/anime-sites") {
-    return fetchAnimeSites(res);
-  }
 
   if (p === "/" || p === "/index.html") {
     res.writeHead(200, {
@@ -26,32 +24,24 @@ const server = http.createServer((req, res) => {
   res.writeHead(404); res.end("Not found");
 });
 
-async function fetchAnimeSites(res) {
-  try {
-    const r = await fetch("https://everythingmoe.com/");
-    const html = await r.text();
-    // Parse the anime streaming block (simplified regex for demo)
-    const start = html.indexOf("Anime Streaming");
-    const end = html.indexOf("Donghua Streaming");
-    const block = html.slice(start, end);
-    
-    // Extract site names and URLs
-    const sites = [];
-    const regex = /<a[^>]+href="([^"]+)"[^>]*>([^<]+)<\/a>/g;
-    let match;
-    while ((match = regex.exec(block)) !== null) {
-      sites.push({ name: match[2].trim(), url: match[1] });
-    }
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(sites));
-  } catch (e) {
-    res.writeHead(500); res.end(JSON.stringify({ error: e.message }));
-  }
+/* Only these embed hosts may be loaded into the shared player (blocks a guest from pushing arbitrary sites). */
+const ALLOWED_HOSTS = ["vidsrc.to", "embedmaster.link", "vidlink.pro", "vidfast.pro", "vidnest.fun"];
+function okUrl(u) {
+  try { const x = new URL(u); return x.protocol === "https:" && ALLOWED_HOSTS.some(h => x.hostname === h || x.hostname.endsWith("." + h)); }
+  catch (e) { return false; }
+}
+/* ref = which title this is, so anyone can switch servers: { k:"movie"|"series", id:"tt123", s, e } */
+function cleanRef(r) {
+  if (!r || typeof r !== "object") return null;
+  const id = clean(r.id, 14);
+  if (!/^tt\d{1,10}$/.test(id)) return null;
+  const n = v => Math.min(9999, Math.max(0, parseInt(v, 10) || 0));
+  return r.k === "series" ? { k: "series", id, s: n(r.s), e: n(r.e) } : { k: "movie", id, s: 0, e: 0 };
 }
 
 const wss = new WebSocketServer({ server, path: "/ws", maxPayload: 16 * 1024 });
 
-/* code -> { host: ws, guests: Set<ws>, now: {url,name} | null } */
+/* code -> { host: ws, guests: Set<ws>, now: {url,name,ref} | null } */
 const rooms = new Map();
 const MAX_ROOMS = 1000, MAX_GUESTS = 30;
 
@@ -111,14 +101,14 @@ wss.on("connection", ws => {
       const text = clean(m.text, 300);
       if (text) broadcast(room, { t: "chat", from: ws.name, text }, ws);
     } else if (m.t === "player" && ws.isHost) {
-      const url = clean(m.url, 600), name = clean(m.name, 150);
-      if (!/^https:\/\/\S+$/.test(url)) return;
-      room.now = { url, name };
-      broadcast(room, { t: "player", url, name }, ws);
+      const url = clean(m.url, 600), name = clean(m.name, 150), ref = cleanRef(m.ref);
+      if (!okUrl(url)) return;
+      room.now = { url, name, ref };
+      broadcast(room, { t: "player", url, name, ref }, ws);
     } else if (m.t === "req-player" && !ws.isHost) {
-      const url = clean(m.url, 600), name = clean(m.name, 150);
-      if (!/^https:\/\/\S+$/.test(url)) return;
-      send(room.host, { t: "req-player", url, name });
+      const url = clean(m.url, 600), name = clean(m.name, 150), ref = cleanRef(m.ref);
+      if (!okUrl(url)) return;
+      send(room.host, { t: "req-player", url, name, ref });
     }
   });
 

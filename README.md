@@ -4,7 +4,7 @@ A shared room for watching with friends. One person hosts, everyone else joins w
 
 ## Deploy on Render (free)
 
-1. Put these files in a new GitHub repo, keeping the `public` folder as it is.
+1. Put these files in a new GitHub repo, keeping the `public` folder (with `index.html` inside) as it is.
 2. On render.com choose New, then Web Service, and connect that repo.
 3. Use these settings (or pick Blueprint and let `render.yaml` fill them in):
    - Build command: `npm install`
@@ -21,3 +21,5 @@ Notes:
     npm start
 
 Then open http://localhost:3000
+
+To add or change a server, edit `SERVERS` in `public/index.html` and add its domain to `ALLOWED_HOSTS` in `server.js`.
