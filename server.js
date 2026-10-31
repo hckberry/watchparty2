@@ -7,15 +7,12 @@ const { WebSocketServer } = require("ws");
 
 const PORT = process.env.PORT || 3000;
 const INDEX = fs.readFileSync(path.join(__dirname, "public", "index.html"));
+/* Only these embed hosts can be played. Keep in sync with SERVERS in public/index.html. */
+const ALLOWED_HOSTS = new Set(["vidsrc.to", "embedmaster.link", "vidlink.pro", "vidfast.pro", "www.2embed.cc", "vidnest.fun"]);
 
 const server = http.createServer((req, res) => {
   const p = (req.url || "/").split("?")[0];
   if (p === "/healthz") { res.writeHead(200); return res.end("ok"); }
-  
-  if (p === "/anime-sites") {
-    return fetchAnimeSites(res);
-  }
-
   if (p === "/" || p === "/index.html") {
     res.writeHead(200, {
       "Content-Type": "text/html; charset=utf-8",
@@ -27,54 +24,42 @@ const server = http.createServer((req, res) => {
   res.writeHead(404); res.end("Not found");
 });
 
-async function fetchAnimeSites(res) {
-  try {
-    const r = await fetch("https://everythingmoe.com/");
-    const html = await r.text();
-    // Parse the anime streaming block (simplified regex for demo)
-    const start = html.indexOf("Anime Streaming");
-    const end = html.indexOf("Donghua Streaming");
-    const block = html.slice(start, end);
-    
-    // Extract site names and URLs
-    const sites = [];
-    const regex = /<a[^>]+href="([^"]+)"[^>]*>([^<]+)<\/a>/g;
-    let match;
-    while ((match = regex.exec(block)) !== null) {
-      sites.push({ name: match[2].trim(), url: match[1] });
-    }
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(sites));
-  } catch (e) {
-    res.writeHead(500); res.end(JSON.stringify({ error: e.message }));
-  }
-}
-
 const wss = new WebSocketServer({ server, path: "/ws", maxPayload: 16 * 1024 });
 
-/* code -> { host: ws|null, guests: Set<ws>, now: {url,name,startedAt}|null,
-             pos: {sec,at,playing}|null, token, hostTimer } */
+/* code -> { host: ws|null, guests: Set<ws>, now: {url,name,meta,startedAt}|null,
+             pos: {sec,at,playing}|null, token, hostTimer, guestsPick } */
 const rooms = new Map();
 const MAX_ROOMS = 1000, MAX_GUESTS = 30, HOST_GRACE_MS = 60000;
 
 const send = (ws, o) => { if (ws.readyState === 1) ws.send(JSON.stringify(o)); };
 const everyone = r => [r.host, ...r.guests].filter(Boolean);
-const headcount = r => (r.host ? 1 : 0) + r.guests.size;
 const broadcast = (r, o, except) => everyone(r).forEach(w => { if (w !== except) send(w, o); });
-const announceCount = r => broadcast(r, { t: "count", n: headcount(r) });
+const announce = r => broadcast(r, { t: "people", list: everyone(r).map(w => ({ name: w.name, host: w === r.host })) });
 const clean = (s, n) => String(s == null ? "" : s).replace(/[\u0000-\u001f]/g, "").trim().slice(0, n);
 
+function validUrl(u) {
+  try { const x = new URL(u); return x.protocol === "https:" && ALLOWED_HOSTS.has(x.hostname); }
+  catch (e) { return false; }
+}
+function cleanMeta(m) {
+  if (!m || typeof m !== "object" || (m.kind !== "movie" && m.kind !== "series")) return null;
+  const id = String(m.id || "");
+  if (!/^tt\d{1,10}$/.test(id)) return null;
+  return { kind: m.kind, id, s: Math.min(parseInt(m.s, 10) || 0, 999), e: Math.min(parseInt(m.e, 10) || 0, 9999) };
+}
+
 /* The room clock: where the show should be right now.
-   exact = the host's player reported its real position (extrapolated forward while playing).
-   Otherwise it is only an estimate based on when the show was started. */
+   exact = the host's player reported its real position recently; otherwise it is an estimate. */
 function roomPos(r) {
   if (!r.now) return null;
   let sec, exact = false, playing = true;
   if (r.pos) {
-    exact = true; playing = r.pos.playing;
-    sec = r.pos.sec + (playing ? (Date.now() - r.pos.at) / 1000 : 0);
+    const age = Date.now() - r.pos.at;
+    playing = r.pos.playing;
+    sec = r.pos.sec + (playing ? age / 1000 : 0);
+    exact = !(playing && age > 15000);
   } else sec = (Date.now() - r.now.startedAt) / 1000;
-  return { url: r.now.url, name: r.now.name, sec: Math.max(0, Math.round(sec)), exact, playing };
+  return { url: r.now.url, name: r.now.name, meta: r.now.meta, sec: Math.max(0, Math.round(sec)), exact, playing };
 }
 
 function closeRoom(code) {
@@ -96,7 +81,7 @@ function genCode() {
 
 wss.on("connection", ws => {
   ws.isAlive = true;
-  ws.room = null; ws.name = "Guest"; ws.isHost = false;
+  ws.room = null; ws.name = "Guest"; ws.isHost = false; ws.cid = "";
   ws.hits = 0;
   ws.on("pong", () => { ws.isAlive = true; });
 
@@ -111,11 +96,11 @@ wss.on("connection", ws => {
       if (ws.room) return;
       if (rooms.size >= MAX_ROOMS) return send(ws, { t: "error", msg: "Server is busy." });
       ws.name = clean(m.name, 18) || "Host"; ws.isHost = true;
-      const code = genCode();
-      const token = crypto.randomBytes(12).toString("hex");
-      const room = { host: ws, guests: new Set(), now: null, pos: null, token, hostTimer: null };
+      const code = genCode(), token = crypto.randomBytes(12).toString("hex");
+      const room = { host: ws, guests: new Set(), now: null, pos: null, token, hostTimer: null, guestsPick: true };
       rooms.set(code, room); ws.room = code;
-      return send(ws, { t: "created", code, token });
+      send(ws, { t: "created", code, token });
+      return announce(room);
     }
 
     if (m.t === "resume") {
@@ -127,9 +112,9 @@ wss.on("connection", ws => {
       const old = room.host;
       if (old && old !== ws) { old.room = null; old.isHost = false; old.terminate(); }
       ws.name = clean(m.name, 18) || "Host"; ws.isHost = true; ws.room = code; room.host = ws;
-      send(ws, { t: "resumed", code });
+      send(ws, { t: "resumed", code, guestsPick: room.guestsPick });
       broadcast(room, { t: "sys", text: ws.name + " is back." }, ws);
-      return announceCount(room);
+      return announce(room);
     }
 
     if (m.t === "join") {
@@ -137,14 +122,18 @@ wss.on("connection", ws => {
       const code = clean(m.code, 6).toUpperCase();
       const room = rooms.get(code);
       if (!room) return send(ws, { t: "error", msg: "Room not found." });
+      const cid = clean(m.cid, 24);
+      /* A reconnecting guest replaces its own stale socket instead of showing up twice. */
+      if (cid) room.guests.forEach(g => { if (g.cid === cid) { room.guests.delete(g); g.room = null; g.terminate(); } });
       if (room.guests.size >= MAX_GUESTS) return send(ws, { t: "error", msg: "Room is full." });
-      ws.name = clean(m.name, 18) || "Guest";
+      ws.name = clean(m.name, 18) || "Guest"; ws.cid = cid;
       room.guests.add(ws); ws.room = code;
       const p = roomPos(room);
-      send(ws, { t: "joined", code, now: room.now ? { url: room.now.url, name: room.now.name } : null,
+      send(ws, { t: "joined", code, guestsPick: room.guestsPick,
+                 now: room.now ? { url: room.now.url, name: room.now.name, meta: room.now.meta } : null,
                  sec: p ? p.sec : 0, exact: p ? p.exact : false });
       if (!m.rejoin) broadcast(room, { t: "sys", text: ws.name + " joined." }, ws);
-      return announceCount(room);
+      return announce(room);
     }
 
     const room = ws.room && rooms.get(ws.room);
@@ -153,16 +142,15 @@ wss.on("connection", ws => {
     if (m.t === "chat") {
       const text = clean(m.text, 300);
       if (text) broadcast(room, { t: "chat", from: ws.name, text }, ws);
-    } else if (m.t === "player" && ws.isHost) {
+    } else if (m.t === "play") {
+      if (!ws.isHost && !room.guestsPick) return send(ws, { t: "sys", text: "Only the host can pick what plays right now." });
       const url = clean(m.url, 600), name = clean(m.name, 150);
-      if (!/^https:\/\/\S+$/.test(url)) return;
-      room.now = { url, name, startedAt: Date.now() }; room.pos = null;
-      broadcast(room, { t: "player", url, name }, ws);
-    } else if (m.t === "req-player" && !ws.isHost) {
-      const url = clean(m.url, 600), name = clean(m.name, 150);
-      if (!/^https:\/\/\S+$/.test(url)) return;
-      if (!room.host) return send(ws, { t: "sys", text: "The host is away right now." });
-      send(room.host, { t: "req-player", url, name });
+      if (!name || !validUrl(url)) return;
+      room.now = { url, name, meta: cleanMeta(m.meta), startedAt: Date.now() }; room.pos = null;
+      broadcast(room, { t: "player", url, name, meta: room.now.meta, by: ws.name });
+    } else if (m.t === "setting" && ws.isHost) {
+      room.guestsPick = !!m.guestsPick;
+      broadcast(room, { t: "settings", guestsPick: room.guestsPick });
     } else if (m.t === "pos" && ws.isHost) {
       const sec = Number(m.sec);
       if (!room.now || !isFinite(sec) || sec < 0 || sec > 86400) return;
@@ -190,13 +178,13 @@ wss.on("connection", ws => {
       /* Give the host a minute to reconnect (phone sleep, wifi blip) before closing the room. */
       room.host = null;
       broadcast(room, { t: "sys", text: "Host lost connection. Waiting up to a minute for them to come back…" });
-      announceCount(room);
+      announce(room);
       const code = ws.room;
       room.hostTimer = setTimeout(() => closeRoom(code), HOST_GRACE_MS);
     } else {
-      room.guests.delete(ws);
+      if (!room.guests.delete(ws)) return;
       broadcast(room, { t: "sys", text: ws.name + " left." });
-      announceCount(room);
+      announce(room);
     }
   });
   ws.on("error", () => {});

@@ -19,6 +19,7 @@ Notes:
 
 The video itself lives inside a third-party embed, so the page can't press play or seek for you. What it does:
 
+- Anyone can pick what plays. The host can switch that off with **Guests can pick**.
 - **Sync with room** (above the player, everyone): reloads your player at the room's current spot. On VidLink and VidFast it jumps straight to that time. On other servers it reloads and tells you the time to skip to.
 - **Sync everyone** (host only): sends the same sync to every guest at once.
 - If the embed reports its playback position, the host's real position is used. Otherwise the spot is an estimate from when the show started, and the app says so.
