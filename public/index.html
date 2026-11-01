@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#0d0e18">
 <title>Watch Party</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f5b94a'/%3E%3Cpath d='M12 9l11 7-11 7z' fill='%230d0e18'/%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
 <style>
 :root{--bg:#0d0e18;--panel:#161827;--panel2:#1f2135;--line:#2a2d46;--text:#edecf6;--mute:#8d90ab;--accent:#f5b94a;--ink:#1b1405;--ok:#3fd6a6;--bad:#ff7a7a;
   --font:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color-scheme:dark}
@@ -58,7 +59,7 @@ label.f{display:block;font-size:13px;color:var(--mute);margin:16px 0 6px}
 .syncbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:12px;font-size:13px;color:var(--mute)}
 .syncbar .grow{flex:1;min-width:150px;padding:0 4px}
 .stage{position:relative;aspect-ratio:16/9;background:#000;border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px var(--line),0 40px 100px -40px rgba(245,185,74,.35)}
-.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.stage iframe, .stage video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;outline:none}
 .empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--mute);gap:6px;text-align:center;padding:16px}
 .empty strong{color:var(--text);font-size:20px;letter-spacing:-.3px}
 .now{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 2px;color:var(--mute);font-size:14px}
@@ -197,6 +198,15 @@ label.f{display:block;font-size:13px;color:var(--mute);margin:16px 0 6px}
           </div>
           <p class="note" id="pickNote" hidden>The host is choosing what plays.</p>
           <div id="results"><div class="msgline">Search for a title to start watching.</div></div>
+          
+          <div class="srcbox" style="margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px;">
+            <label class="f">Direct Raw Stream (Scraper)</label>
+            <div class="search" style="margin-bottom: 8px;">
+              <input id="scrapeId" placeholder="IMDB ID (e.g. tt1375666)" spellcheck="false">
+              <button class="btn primary" id="scrapeBtn">Fetch Links</button>
+            </div>
+            <div id="scrapeResults" style="margin-top: 8px;"></div>
+          </div>
         </div>
 
         <div id="showView" hidden>
@@ -226,7 +236,7 @@ label.f{display:block;font-size:13px;color:var(--mute);margin:16px 0 6px}
 const $ = s => document.querySelector(s);
 const S = { ws:null, inRoom:false, role:null, code:'', name:'Guest', tab:'browse', kind:'movie', seasons:{}, show:null, cur:null,
   token:'', pos:null, posSentAt:0, tries:0, rt:null, pt:null, pongAt:0, leaving:false, dropped:false, ended:false, guestsPick:true,
-  cid:(Math.random().toString(36).slice(2) + Date.now().toString(36)).slice(0,24) };
+  cid:(Math.random().toString(36).slice(2) + Date.now().toString(36)).slice(0,24), hls:null };
 const META = 'https://v3-cinemeta.strem.io';
 const store = { get(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} } };
 
@@ -264,7 +274,6 @@ function renderPeople(list){
 }
 
 /* ---------- servers ---------- */
-/* Keep the hosts in sync with ALLOWED_HOSTS in server.js */
 const SERVERS = [
   { name:'VidSrc (Fast)', m:i=>`https://vidsrc.to/embed/movie/${i}`, t:(i,s,e)=>`https://vidsrc.to/embed/tv/${i}/${s}/${e}` },
   { name:'EmbedMaster', m:i=>`https://embedmaster.link/movie/${i}`, t:(i,s,e)=>`https://embedmaster.link/tv/${i}/${s}/${e}` },
@@ -286,36 +295,74 @@ const play = (kind,id,s,e,name) => sendPlay(serverUrl(+$('#serverSelect').value,
 
 /* ---------- player & sync ---------- */
 function fmtTime(s){ s=Math.max(0,Math.round(s)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60, p=n=>String(n).padStart(2,'0'); return h ? `${h}:${p(m)}:${p(x)}` : `${m}:${p(x)}`; }
-const START_HOSTS = ['vidlink.pro','vidfast.pro'];   // embeds that accept ?startAt=
+const START_HOSTS = ['vidlink.pro','vidfast.pro'];
 function canStart(url){ try{ return START_HOSTS.includes(new URL(url).hostname); }catch(e){ return false; } }
 function withStart(url, sec){
   if (!(sec>=5) || !canStart(url)) return url;
   try{ const u=new URL(url); u.searchParams.set('startAt', Math.floor(sec)); return u.toString(); }catch(e){ return url; }
 }
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
 function loadPlayer(url, name, sec, note, meta){
   const sandbox = $('#blockPop').checked ? ' sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"' : '';
   S.cur = { url, name, meta:meta||null }; S.pos = null;
-  $('#player-container').innerHTML = `<iframe src="${esc(withStart(url, sec))}"${sandbox} allowfullscreen allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>`;
+  
+  if (S.hls) { S.hls.destroy(); S.hls = null; }
+
+  if (/\.m3u8(\?|$)/i.test(url) || /\.mp4(\?|$)/i.test(url)) {
+    $('#player-container').innerHTML = `<video id="native-video" controls autoplay playsinline style="width:100%;height:100%;background:#000"></video>`;
+    const video = $('#native-video');
+    
+    if (/\.m3u8/i.test(url) && Hls.isSupported()) {
+      S.hls = new Hls();
+      S.hls.loadSource(url);
+      S.hls.attachMedia(video);
+    } else {
+      video.src = url;
+    }
+    
+    if (sec > 0) video.currentTime = sec;
+    
+    ['play', 'pause', 'seeked'].forEach(evt => {
+      video.addEventListener(evt, () => {
+        if (S.role === 'host') send({t:'pos', sec: video.currentTime, playing: !video.paused});
+      });
+    });
+    clearInterval(video._posInt);
+    video._posInt = setInterval(() => {
+      if (S.role === 'host' && !video.paused) send({t:'pos', sec: video.currentTime, playing: true});
+    }, 3000);
+
+  } else {
+    $('#player-container').innerHTML = `<iframe src="${esc(withStart(url, sec))}"${sandbox} allowfullscreen allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>`;
+  }
+  
   $('#nowTitle').textContent = name; $('#nowBar').hidden = false;
   $('#nextSrv').hidden = !(meta);
   if (note) addChat('system', note);
 }
+
 function applySync(m, auto){
   if (!m.url){ if (!auto) toast('Nothing is playing yet.'); return; }
-  const jump = !auto || m.exact;            // on first join only jump when the position is real
+  const jump = !auto || m.exact;            
   loadPlayer(m.url, m.name, jump ? m.sec : 0, '', m.meta);
+  
+  const video = $('#native-video');
+  if (video && jump) {
+     video.currentTime = m.sec;
+     if (m.playing) video.play().catch(()=>{});
+  }
+
   const at = fmtTime(m.sec), est = m.exact ? '' : ' (estimate)';
   let msg;
   if (!jump) msg = `Room is around ${at}${est}. Press Sync to jump there.`;
   else if (m.sec < 5) msg = 'Synced with the room.';
-  else if (canStart(m.url)) msg = `Synced. Jumped to ${at}${est}.`;
+  else if (canStart(m.url) || video) msg = `Synced. Jumped to ${at}${est}.`;
   else msg = `Reloaded. Room is at ${at}${est}. Skip to that spot to match.`;
   $('#syncInfo').textContent = msg; toast(msg);
 }
 function requestSync(){ if (!live()) return toast('Not connected yet. Reconnecting…'); send({t:'sync'}); }
 
-/* Embeds that post their playback position let the host keep an exact room clock. */
 window.addEventListener('message', e => {
   const f = document.querySelector('#player-container iframe');
   if (!f || e.source !== f.contentWindow) return;
@@ -333,7 +380,6 @@ window.addEventListener('message', e => {
   if (now - S.posSentAt >= 5000 || kind==='pause' || kind==='play' || kind==='seeked'){ S.posSentAt = now; send({t:'pos', sec, playing}); }
 });
 
-/* fullscreen → landscape */
 function onFs(){
   const fs = document.fullscreenElement || document.webkitFullscreenElement, so = screen.orientation;
   if(!so) return;
@@ -366,7 +412,7 @@ async function doSearch(q){
   let metas=[];
   try{ const r=await fetch(`${META}/catalog/${kind}/top/search=${encodeURIComponent(q)}.json`); const j=await r.json(); metas=j.metas||[]; }catch(e){}
   if (!metas.length){ const prev=S.kind; S.kind=kind; metas=await imdbSearch(q); S.kind=prev; }
-  if (id!==reqId) return;                    // a newer search replaced this one
+  if (id!==reqId) return;
   if (!metas.length){ box.innerHTML=''; const d=document.createElement('div'); d.className='msgline'; d.textContent=`No results for "${q}". Check the spelling or try another title.`; box.appendChild(d); return; }
   const grid=document.createElement('div'); grid.className='grid';
   metas.slice(0,18).forEach(m => {
@@ -402,6 +448,54 @@ function renderEpisodes(season){
     if (when && !isNaN(when)){ const s=document.createElement('small'); s.textContent=(soon?'Airs ':'')+when.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}); t.appendChild(s); }
     b.append(n,t); b.onclick=()=>play('series',S.show.id,season,ep,`${S.show.name} S${season}E${ep}`); box.appendChild(b);
   });
+}
+/* ---------- scraper ---------- */
+async function fetchRawLinks() {
+  const id = $('#scrapeId').value.trim();
+  if (!id) return toast('Enter an IMDB ID (e.g. tt1375666)');
+  const btn = $('#scrapeBtn'), box = $('#scrapeResults');
+  btn.disabled = true; btn.textContent = 'Fetching…';
+  box.innerHTML = '<div class="msgline">Extracting stream (multi-hop)…</div>';
+  
+  try {
+    const res = await fetch(`/api/scrape?imdb=${id}`);
+    const data = await res.json();
+    
+    if (!res.ok) {
+      box.innerHTML = `<div class="msgline" style="color:var(--bad); padding: 10px; background: rgba(255,0,0,0.1); border-radius: 8px;">${data.error}<br><br><small>${data.hint || ''}</small></div>`;
+      return;
+    }
+    
+    if (!data.links || !data.links.length) throw new Error('No links found');
+    
+    box.innerHTML = '';
+    data.links.forEach(url => {
+      if (!/^https:\/\//.test(url)) return;
+      const row = document.createElement('div');
+      row.className = 'result';
+      row.style.cssText = 'display:flex; gap:6px; align-items:center; background:var(--panel2); padding:8px; border-radius:6px; margin-bottom:6px;';
+      
+      const txt = document.createElement('div');
+      txt.className = 'rtitle';
+      txt.style.cssText = 'flex:1; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+      txt.textContent = url;
+      
+      const playBtn = document.createElement('button');
+      playBtn.className = 'btn sm primary';
+      playBtn.textContent = 'Play';
+      playBtn.onclick = () => {
+        sendPlay(url, 'Direct Stream (' + id + ')', null);
+        toast('Playing raw stream');
+      };
+      
+      row.append(txt, playBtn);
+      box.appendChild(row);
+    });
+  } catch(e) {
+    box.innerHTML = `<div class="msgline" style="color:var(--bad)">Failed: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Fetch Links';
+  }
 }
 
 /* ---------- connection ---------- */
@@ -443,7 +537,6 @@ function reconnectNow(){
     else send({t:'join', code:S.code, name:S.name, cid:S.cid, rejoin:true});
   });
 }
-/* Phones can leave a socket looking open while it is dead, so check it with a ping. */
 function checkAlive(){
   if (!S.inRoom || S.leaving || S.ended || !live()) return;
   const w=S.ws; S.pongAt=0; send({t:'ping'}); clearTimeout(S.pt);
@@ -519,11 +612,16 @@ document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
   $('#searchInput').placeholder = S.kind==='movie' ? 'Search movies' : 'Search TV shows';
   const q=$('#searchInput').value.trim(); if(q) doSearch(q); else { ++reqId; $('#results').innerHTML='<div class="msgline">Search for a title to start watching.</div>'; }
 });
+
+$('#scrapeBtn').onclick = fetchRawLinks;
+$('#scrapeId').onkeydown = e => { if(e.key==='Enter') fetchRawLinks(); };
+
 $('#nextSrv').onclick = () => {
   const c=S.cur; if(!c || !c.meta) return;
   const i=(serverIndexOf(c.url)+1) % SERVERS.length; $('#serverSelect').value=i; toast('Trying '+SERVERS[i].name+' for everyone');
   sendPlay(serverUrl(i,c.meta.kind,c.meta.id,c.meta.s,c.meta.e), c.name, c.meta);
 };
+
 $('#blockPop').onchange = () => { if (S.cur){ requestSync(); } };
 $('#guestPick').onchange = e => send({t:'setting', guestsPick:e.target.checked});
 $('#theaterBtn').onclick = () => { const on=$('#layout').classList.toggle('theater'); $('#theaterBtn').textContent = on ? 'Show panel' : 'Theater'; };
