@@ -1,0 +1,13 @@
+{
+  "name": "watch-party",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Watch movies and shows together with friends in a shared room.",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { 
+    "ws": "^8.18.0",
+    "axios": "^1.7.2"
+  }
+}
